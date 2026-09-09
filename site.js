@@ -4,7 +4,7 @@ import "./site-header.js?v=20260806";
 export const proofCount = proofIndex.length;
 export const proofNoun = proofCount === 1 ? "Proof" : "Proofs";
 export const proofRouteLabel = `${proofCount} ${proofNoun}`;
-export const seriesSubtitle = `${proofRouteLabel} to Learn Lean`;
+export const seriesSubtitle = `${proofRouteLabel} to learn Lean (with many more on the way)`;
 export const seriesTitle = `Lean In: ${seriesSubtitle}`;
 
 export function siteHeaderHtml(root) {

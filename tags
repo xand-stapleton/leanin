@@ -8,6 +8,7 @@
 !_TAG_FIELD_DESCRIPTION	name	/tag name/
 !_TAG_FIELD_DESCRIPTION	pattern	/pattern/
 !_TAG_FIELD_DESCRIPTION	typeref	/Type and name of a variable or typedef/
+!_TAG_FIELD_DESCRIPTION!Python	nameref	/the original name for the tag/
 !_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
 !_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
 !_TAG_KIND_DESCRIPTION!CSS	c,class	/classes/
@@ -40,6 +41,13 @@
 !_TAG_KIND_DESCRIPTION!Markdown	s,section	/sections/
 !_TAG_KIND_DESCRIPTION!Markdown	t,subsubsection	/level 3 sections/
 !_TAG_KIND_DESCRIPTION!Markdown	u,l5subsection	/level 5 sections/
+!_TAG_KIND_DESCRIPTION!Python	I,namespace	/name referring a module defined in other file/
+!_TAG_KIND_DESCRIPTION!Python	Y,unknown	/name referring a class\/variable\/function\/module defined in other module/
+!_TAG_KIND_DESCRIPTION!Python	c,class	/classes/
+!_TAG_KIND_DESCRIPTION!Python	f,function	/functions/
+!_TAG_KIND_DESCRIPTION!Python	i,module	/modules/
+!_TAG_KIND_DESCRIPTION!Python	m,member	/class members/
+!_TAG_KIND_DESCRIPTION!Python	v,variable	/variables/
 !_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
 !_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
@@ -48,6 +56,7 @@
 !_TAG_PARSER_VERSION!HTML	0.0	/current.age/
 !_TAG_PARSER_VERSION!JavaScript	1.1	/current.age/
 !_TAG_PARSER_VERSION!Markdown	1.1	/current.age/
+!_TAG_PARSER_VERSION!Python	1.1	/current.age/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
 !_TAG_PROC_CWD	/Users/as/astapleton_phd/leanin_PUBLIC/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
@@ -58,6 +67,13 @@
 !_TAG_ROLE_DESCRIPTION!HTML!script	extFile	/referenced as external files/
 !_TAG_ROLE_DESCRIPTION!HTML!stylesheet	extFile	/referenced as external files/
 !_TAG_ROLE_DESCRIPTION!JavaScript!function	foreigndecl	/declared in foreign languages/
+!_TAG_ROLE_DESCRIPTION!Python!function	entryPoint	/specified as an entry point/
+!_TAG_ROLE_DESCRIPTION!Python!module	entryPoint	/specified as a module of an entry point/
+!_TAG_ROLE_DESCRIPTION!Python!module	imported	/imported modules/
+!_TAG_ROLE_DESCRIPTION!Python!module	indirectlyImported	/module imported in alternative name/
+!_TAG_ROLE_DESCRIPTION!Python!module	namespace	/namespace from where classes\/variables\/functions are imported/
+!_TAG_ROLE_DESCRIPTION!Python!unknown	imported	/imported from the other module/
+!_TAG_ROLE_DESCRIPTION!Python!unknown	indirectlyImported	/classes\/variables\/functions\/modules imported in alternative name/
 *	styles.css	/^* {$/;"	s
 .actions	ancient.css	/^.actions,$/;"	c
 .actions	styles.css	/^.actions {$/;"	c
@@ -202,10 +218,10 @@ Install mathlib in a Project	lean-neovim-setup.html	/^          <h2>Install math
 Install the Tools	lean-neovim-setup.html	/^          <h2>Install the Tools<\/h2>$/;"	i
 Keep Open	learn-mathlib-in-y-minutes.html	/^          <h2>Keep Open<\/h2>$/;"	i
 Lean 4 Learning Portal	helpful-resources.html	/^          <h3>Lean 4 Learning Portal<\/h3>$/;"	j
-Lean In: Proofs to Learn Lean	index.html	/^  <title>Lean In: Proofs to Learn Lean<\/title>$/;"	j
 Lean In: Proofs to Learn Lean	intro-to-lean-in-18-proofs/index.html	/^  <title>Lean In: Proofs to Learn Lean<\/title>$/;"	j
-Lean In:Proofs to Learn Lean	index.html	/^        <h1><span class="title-main">Lean In:<\/span><span class="title-subtitle" data-proof-sub/;"	h
+Lean In: Proofs to learn Lean	index.html	/^  <title>Lean In: Proofs to learn Lean<\/title>$/;"	j
 Lean In:Proofs to Learn Lean	intro-to-lean-in-18-proofs/index.html	/^      <h1><span class="title-main">Lean In:<\/span><span class="title-subtitle" data-proof-subti/;"	h
+Lean In:Proofs to learn Lean (with many more on the way)	index.html	/^        <h1><span class="title-main">Lean In:<\/span><span class="title-subtitle" data-proof-sub/;"	h
 Lean Proof	intro-to-lean-in-18-proofs/proof-01-algebraic-identity.html	/^    <h2>Lean Proof<\/h2>$/;"	i
 Lean Proof	intro-to-lean-in-18-proofs/proof-02-ordered-arithmetic.html	/^    <h2>Lean Proof<\/h2>$/;"	i
 Lean Proof	intro-to-lean-in-18-proofs/proof-03-set-intersection-commutative.html	/^    <h2>Lean Proof<\/h2>$/;"	i
@@ -234,6 +250,7 @@ Native Lean Breakdown	intro-to-lean-in-18-proofs/proof-02-ordered-arithmetic.htm
 Native Lean Breakdown	intro-to-lean-in-18-proofs/proof-03-set-intersection-commutative.html	/^    <h2>Native Lean Breakdown<\/h2>$/;"	i
 Native Lean Version	intro-to-lean-in-18-proofs/proof-02-ordered-arithmetic.html	/^    <h2>Native Lean Version<\/h2>$/;"	i
 Native Lean Version	intro-to-lean-in-18-proofs/proof-03-set-intersection-commutative.html	/^    <h2>Native Lean Version<\/h2>$/;"	i
+NoCacheHTTPRequestHandler	server.py	/^class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):$/;"	c
 One File	learn-mathlib-in-y-minutes.html	/^        <h2>One File<\/h2>$/;"	i
 Optional Pre-Configured Dotfiles	lean-neovim-setup.html	/^          <h2>Optional Pre-Configured Dotfiles<\/h2>$/;"	i
 Proof Breakdown	intro-to-lean-in-18-proofs/proof-01-algebraic-identity.html	/^    <h2>Proof Breakdown<\/h2>$/;"	i
@@ -290,25 +307,12 @@ anonymousObject5ecfc47b0605	proof-index.js	/^  {$/;"	v
 anonymousObject5ecfc47b0705	proof-index.js	/^  {$/;"	v
 anonymousObject5ecfc47b0805	proof-index.js	/^  {$/;"	v
 anonymousObject5ecfc47b0905	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0a05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0b05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0c05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0d05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0e05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b0f05	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1005	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1105	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1205	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1305	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1405	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1505	proof-index.js	/^  {$/;"	v
-anonymousObject5ecfc47b1605	proof-index.js	/^  {$/;"	v
 body	ancient.css	/^  body {$/;"	s
 body	ancient.css	/^body {$/;"	s
 body	styles.css	/^body {$/;"	s
-bonus	proof-index.js	/^    "bonus": true,$/;"	p	variable:anonymousObject5ecfc47b1505
 code	ancient.css	/^code {$/;"	s
 code	styles.css	/^code {$/;"	s
+end_headers	server.py	/^    def end_headers(self):$/;"	m	class:NoCacheHTTPRequestHandler
 featured-proofs	index.html	/^      <div class="proof-grid" id="featured-proofs"><\/div>$/;"	I
 fontCache	proofs.js	/^      fontCache: "global"$/;"	p	property:window.MathJax.svg
 h1	ancient.css	/^h1 {$/;"	s
@@ -321,6 +325,7 @@ h3	ancient.css	/^h3 {$/;"	s
 h3	styles.css	/^h3 {$/;"	s
 html	ancient.css	/^html {$/;"	s
 html	site-header.js	/^    html: siteHeaderHtml$/;"	p	property:window.LeanInHeader
+httpServer	server.py	/^httpServer = http.server.HTTPServer(('', port), NoCacheHTTPRequestHandler)$/;"	v
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0105
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0205
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0305
@@ -330,19 +335,6 @@ ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0605
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0705
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0805
 ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0905
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0a05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0b05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0c05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0d05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0e05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b0f05
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1005
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1105
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1205
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1305
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1405
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1505
-ideas	proof-index.js	/^    "ideas": [$/;"	p	variable:anonymousObject5ecfc47b1605
 inferRootPrefix	proofs.js	/^function inferRootPrefix() {$/;"	f
 initSiteChrome	site.js	/^export function initSiteChrome() {$/;"	f
 inlineMath	proofs.js	/^      inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]]$/;"	p	property:window.MathJax.tex
@@ -351,20 +343,7 @@ main	styles.css	/^main {$/;"	s
 mathlib Documentation	helpful-resources.html	/^          <h3>mathlib Documentation<\/h3>$/;"	j
 navigationHtml	site-header.js	/^  function navigationHtml(root) {$/;"	f	function:anonymousFunction5deee17b0100
 number	proof-index.js	/^    "number": 1,$/;"	p	variable:anonymousObject5ecfc47b0105
-number	proof-index.js	/^    "number": 10,$/;"	p	variable:anonymousObject5ecfc47b0a05
-number	proof-index.js	/^    "number": 11,$/;"	p	variable:anonymousObject5ecfc47b0b05
-number	proof-index.js	/^    "number": 12,$/;"	p	variable:anonymousObject5ecfc47b0c05
-number	proof-index.js	/^    "number": 13,$/;"	p	variable:anonymousObject5ecfc47b0d05
-number	proof-index.js	/^    "number": 14,$/;"	p	variable:anonymousObject5ecfc47b0e05
-number	proof-index.js	/^    "number": 15,$/;"	p	variable:anonymousObject5ecfc47b0f05
-number	proof-index.js	/^    "number": 16,$/;"	p	variable:anonymousObject5ecfc47b1005
-number	proof-index.js	/^    "number": 17,$/;"	p	variable:anonymousObject5ecfc47b1105
-number	proof-index.js	/^    "number": 18,$/;"	p	variable:anonymousObject5ecfc47b1205
-number	proof-index.js	/^    "number": 19,$/;"	p	variable:anonymousObject5ecfc47b1305
 number	proof-index.js	/^    "number": 2,$/;"	p	variable:anonymousObject5ecfc47b0205
-number	proof-index.js	/^    "number": 20,$/;"	p	variable:anonymousObject5ecfc47b1405
-number	proof-index.js	/^    "number": 21,$/;"	p	variable:anonymousObject5ecfc47b1505
-number	proof-index.js	/^    "number": 22,$/;"	p	variable:anonymousObject5ecfc47b1605
 number	proof-index.js	/^    "number": 3,$/;"	p	variable:anonymousObject5ecfc47b0305
 number	proof-index.js	/^    "number": 4,$/;"	p	variable:anonymousObject5ecfc47b0405
 number	proof-index.js	/^    "number": 5,$/;"	p	variable:anonymousObject5ecfc47b0505
@@ -375,6 +354,7 @@ number	proof-index.js	/^    "number": 9,$/;"	p	variable:anonymousObject5ecfc47b0
 options	proofs.js	/^    options: {$/;"	p	property:window.MathJax
 pageRoot	site-header.js	/^  function pageRoot() {$/;"	f	function:anonymousFunction5deee17b0100
 plainTitle	proofs.js	/^function plainTitle(proof) {$/;"	f
+port	server.py	/^port = int(sys.argv[1])$/;"	v
 pre	ancient.css	/^pre {$/;"	s
 pre	styles.css	/^pre {$/;"	s
 proof-grid	intro-to-lean-in-18-proofs/index.html	/^      <div class="proof-grid" id="proof-grid"><\/div>$/;"	I
@@ -393,7 +373,7 @@ renderProofSourcePage	proofs.js	/^function renderProofSourcePage() {$/;"	f
 renderSiteHeader	site-header.js	/^  function renderSiteHeader(root = pageRoot()) {$/;"	f	function:anonymousFunction5deee17b0100
 renderSiteHeader	site.js	/^export function renderSiteHeader() {$/;"	f
 rootPrefix	proofs.js	/^const rootPrefix = inferRootPrefix();$/;"	C
-seriesSubtitle	site.js	/^export const seriesSubtitle = `${proofRouteLabel} to Learn Lean`;$/;"	C
+seriesSubtitle	site.js	/^export const seriesSubtitle = `${proofRouteLabel} to learn Lean (with many more on the way)`;$/;"	C
 seriesTitle	site.js	/^export const seriesTitle = `Lean In: ${seriesSubtitle}`;$/;"	C
 setText	site.js	/^function setText(selector, value) {$/;"	f
 setupAncientMode	site-header.js	/^    setupAncientMode,$/;"	p	property:window.LeanInHeader
@@ -404,73 +384,34 @@ siteHeaderHtml	site.js	/^export function siteHeaderHtml(root) {$/;"	f
 skipHtmlTags	proofs.js	/^      skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]$/;"	p	property:window.MathJax.options
 slug	proof-index.js	/^    "slug": "algebraic-identity",$/;"	p	variable:anonymousObject5ecfc47b0105
 slug	proof-index.js	/^    "slug": "arbitrarily-large-primes",$/;"	p	variable:anonymousObject5ecfc47b0705
-slug	proof-index.js	/^    "slug": "cantors-theorem",$/;"	p	variable:anonymousObject5ecfc47b0d05
-slug	proof-index.js	/^    "slug": "central-limit-theorem",$/;"	p	variable:anonymousObject5ecfc47b1405
 slug	proof-index.js	/^    "slug": "consecutive-naturals-coprime",$/;"	p	variable:anonymousObject5ecfc47b0505
-slug	proof-index.js	/^    "slug": "determinant-two-by-two",$/;"	p	variable:anonymousObject5ecfc47b0e05
 slug	proof-index.js	/^    "slug": "finite-geometric-series",$/;"	p	variable:anonymousObject5ecfc47b0905
-slug	proof-index.js	/^    "slug": "finite-pigeonhole-principle",$/;"	p	variable:anonymousObject5ecfc47b0c05
-slug	proof-index.js	/^    "slug": "gaussian-elimination-three-by-three",$/;"	p	variable:anonymousObject5ecfc47b1505
-slug	proof-index.js	/^    "slug": "handshake-lemma",$/;"	p	variable:anonymousObject5ecfc47b1105
 slug	proof-index.js	/^    "slug": "inclusion-exclusion-two-finite-sets",$/;"	p	variable:anonymousObject5ecfc47b0605
-slug	proof-index.js	/^    "slug": "inverse-of-product",$/;"	p	variable:anonymousObject5ecfc47b0a05
-slug	proof-index.js	/^    "slug": "irrationality-sqrt-two",$/;"	p	variable:anonymousObject5ecfc47b1005
-slug	proof-index.js	/^    "slug": "jordans-lemma",$/;"	p	variable:anonymousObject5ecfc47b1305
 slug	proof-index.js	/^    "slug": "odd-squares-are-odd",$/;"	p	variable:anonymousObject5ecfc47b0405
 slug	proof-index.js	/^    "slug": "ordered-arithmetic",$/;"	p	variable:anonymousObject5ecfc47b0205
-slug	proof-index.js	/^    "slug": "parsevals-theorem",$/;"	p	variable:anonymousObject5ecfc47b1605
-slug	proof-index.js	/^    "slug": "polynomial-factor-theorem",$/;"	p	variable:anonymousObject5ecfc47b0f05
-slug	proof-index.js	/^    "slug": "powers-of-commuting-elements",$/;"	p	variable:anonymousObject5ecfc47b0b05
 slug	proof-index.js	/^    "slug": "set-intersection-commutative",$/;"	p	variable:anonymousObject5ecfc47b0305
-slug	proof-index.js	/^    "slug": "specialised-extreme-value-theorem",$/;"	p	variable:anonymousObject5ecfc47b1205
 slug	proof-index.js	/^    "slug": "sum-first-n-naturals",$/;"	p	variable:anonymousObject5ecfc47b0805
 storageKey	theme-loader.js	/^    storageKey: storageKey$/;"	p	property:window.LeanInTheme
-summary	proof-index.js	/^    "summary": "A $2 \\\\times 2$ matrix has determinant $ad - bc$.",$/;"	p	variable:anonymousObject5ecfc47b0e05
-summary	proof-index.js	/^    "summary": "A polynomial has $a$ as a root if and only if $X - a$ divides it.",$/;"	p	variable:anonymousObject5ecfc47b0f05
 summary	proof-index.js	/^    "summary": "Adding the same integer to both sides preserves an inequality.",$/;"	p	variable:anonymousObject5ecfc47b0205
 summary	proof-index.js	/^    "summary": "Consecutive natural numbers are coprime.",$/;"	p	variable:anonymousObject5ecfc47b0505
-summary	proof-index.js	/^    "summary": "For a square-integrable function on an interval, the sum of the squared Fourier /;"	p	variable:anonymousObject5ecfc47b1605
 summary	proof-index.js	/^    "summary": "For every natural number, there is a larger prime.",$/;"	p	variable:anonymousObject5ecfc47b0705
 summary	proof-index.js	/^    "summary": "For integers $x$ and $y$, $(x + y)^2 = x^2 + 2xy + y^2$.",$/;"	p	variable:anonymousObject5ecfc47b0105
 summary	proof-index.js	/^    "summary": "For integers $x$ and natural numbers $n$, $(x - 1)\\\\sum_{i=0}^{n-1} x^i = x^n /;"	p	variable:anonymousObject5ecfc47b0905
-summary	proof-index.js	/^    "summary": "If two monoid elements commute, the power of their product is the product of the/;"	p	variable:anonymousObject5ecfc47b0b05
-summary	proof-index.js	/^    "summary": "In a group, the inverse of a product reverses the order of its factors.",$/;"	p	variable:anonymousObject5ecfc47b0a05
-summary	proof-index.js	/^    "summary": "No function from a type to its power set is surjective.",$/;"	p	variable:anonymousObject5ecfc47b0d05
-summary	proof-index.js	/^    "summary": "Normalised sums of independent, identically distributed real random variables wi/;"	p	variable:anonymousObject5ecfc47b1405
-summary	proof-index.js	/^    "summary": "One step of Gaussian elimination gives the determinant of a $3 \\\\times 3$ matr/;"	p	variable:anonymousObject5ecfc47b1505
 summary	proof-index.js	/^    "summary": "Set intersection is commutative.",$/;"	p	variable:anonymousObject5ecfc47b0305
 summary	proof-index.js	/^    "summary": "The cardinalities of two finite sets satisfy the inclusion-exclusion formula.",$/;"	p	variable:anonymousObject5ecfc47b0605
-summary	proof-index.js	/^    "summary": "The function $x \\\\mapsto x^2$ attains a maximum on $[0, 1]$.",$/;"	p	variable:anonymousObject5ecfc47b1205
 summary	proof-index.js	/^    "summary": "The square of an odd natural number is odd.",$/;"	p	variable:anonymousObject5ecfc47b0405
-summary	proof-index.js	/^    "summary": "The square root of $2$ is irrational.",$/;"	p	variable:anonymousObject5ecfc47b1005
-summary	proof-index.js	/^    "summary": "The sum of the vertex degrees of a finite simple graph is twice its number of ed/;"	p	variable:anonymousObject5ecfc47b1105
-summary	proof-index.js	/^    "summary": "The upper-semicircle contour integral in Jordan's lemma tends to zero.",$/;"	p	variable:anonymousObject5ecfc47b1305
-summary	proof-index.js	/^    "summary": "There is no injection from a set of $n + 1$ elements to a set of $n$ elements.",$/;"	p	variable:anonymousObject5ecfc47b0c05
 summary	proof-index.js	/^    "summary": "Twice the sum of the natural numbers from $0$ to $n$ is $n(n + 1)$.",$/;"	p	variable:anonymousObject5ecfc47b0805
 svg	proofs.js	/^    svg: {$/;"	p	property:window.MathJax
 tagsHtml	proofs.js	/^function tagsHtml(ideas) {$/;"	f
 tex	proofs.js	/^    tex: {$/;"	p	property:window.MathJax
-title	proof-index.js	/^    "title": "A Specialised Extreme Value Theorem",$/;"	p	variable:anonymousObject5ecfc47b1205
-title	proof-index.js	/^    "title": "Bonus Proof: Gaussian Elimination for a $3 \\\\times 3$ Matrix",$/;"	p	variable:anonymousObject5ecfc47b1505
-title	proof-index.js	/^    "title": "Cantor's Theorem",$/;"	p	variable:anonymousObject5ecfc47b0d05
 title	proof-index.js	/^    "title": "Consecutive Natural Numbers Are Coprime",$/;"	p	variable:anonymousObject5ecfc47b0505
 title	proof-index.js	/^    "title": "Euclid's Theorem: Arbitrarily Large Primes",$/;"	p	variable:anonymousObject5ecfc47b0705
 title	proof-index.js	/^    "title": "Inclusion-Exclusion for Two Finite Sets",$/;"	p	variable:anonymousObject5ecfc47b0605
 title	proof-index.js	/^    "title": "Inequalities and Ordered Arithmetic",$/;"	p	variable:anonymousObject5ecfc47b0205
-title	proof-index.js	/^    "title": "Jordan's Lemma",$/;"	p	variable:anonymousObject5ecfc47b1305
 title	proof-index.js	/^    "title": "Odd Squares Are Odd",$/;"	p	variable:anonymousObject5ecfc47b0405
-title	proof-index.js	/^    "title": "Parseval's Theorem",$/;"	p	variable:anonymousObject5ecfc47b1605
-title	proof-index.js	/^    "title": "Powers of Commuting Elements",$/;"	p	variable:anonymousObject5ecfc47b0b05
 title	proof-index.js	/^    "title": "Quadratic Binomial Expansion",$/;"	p	variable:anonymousObject5ecfc47b0105
 title	proof-index.js	/^    "title": "Set Intersection Is Commutative",$/;"	p	variable:anonymousObject5ecfc47b0305
-title	proof-index.js	/^    "title": "The Central Limit Theorem",$/;"	p	variable:anonymousObject5ecfc47b1405
-title	proof-index.js	/^    "title": "The Determinant of a $2 \\\\times 2$ Matrix",$/;"	p	variable:anonymousObject5ecfc47b0e05
 title	proof-index.js	/^    "title": "The Finite Geometric Series",$/;"	p	variable:anonymousObject5ecfc47b0905
-title	proof-index.js	/^    "title": "The Finite Pigeonhole Principle",$/;"	p	variable:anonymousObject5ecfc47b0c05
-title	proof-index.js	/^    "title": "The Handshake Lemma",$/;"	p	variable:anonymousObject5ecfc47b1105
-title	proof-index.js	/^    "title": "The Inverse of a Product in a Group",$/;"	p	variable:anonymousObject5ecfc47b0a05
-title	proof-index.js	/^    "title": "The Irrationality of $\\\\sqrt{2}$",$/;"	p	variable:anonymousObject5ecfc47b1005
-title	proof-index.js	/^    "title": "The Polynomial Factor Theorem",$/;"	p	variable:anonymousObject5ecfc47b0f05
 title	proof-index.js	/^    "title": "The Sum of the First $n$ Natural Numbers",$/;"	p	variable:anonymousObject5ecfc47b0805
 updateSeriesCopy	site.js	/^export function updateSeriesCopy() {$/;"	f
 window.LeanInHeader	site-header.js	/^  window.LeanInHeader = {$/;"	p
