@@ -1,0 +1,88 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>(x - 1) * ∑ i &lt; n, x^i = x^n - 1</code></pre>
+    <blockquote><strong>Read this as:</strong> multiplying $1+x+\cdots+x^{n-1}$ by $x-1$ makes all the middle terms cancel, leaving $x^n-1$.</blockquote>
+    <p>For example, when $n=4$,</p>
+    <p>\[
+      \begin{aligned}
+      (x-1)(1+x+x^2+x^3)
+        &amp;=(x+x^2+x^3+x^4)-(1+x+x^2+x^3)\\
+        &amp;=x^4-1.
+      \end{aligned}
+    \]</p>
+    <p>The proof below uses induction rather than expanding the whole sum at once. The successor step appends one term $x^n$ and then reuses the identity for the previous $n$ terms.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof reuses the induction pattern from the previous example, with powers adding one extra rewrite step in the successor case.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Prove the multiplication form of the geometric series identity, avoiding division.</li>
+      <li>Induct on the number of terms.</li>
+      <li>Split the successor sum into the previous sum plus the new power.</li>
+      <li>Use the induction hypothesis on the previous sum.</li>
+      <li>Rewrite $x^{n+1}$ as $x^n x$ and normalise the remaining algebra.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+The finite geometric series identity, written without division:
+`(x - 1) * (1 + x + ... + x^(n - 1)) = x^n - 1`.
+-/
+theorem finite_geometric_series (x : ℤ) (n : ℕ) :
+    (x - 1) * (∑ i ∈ Finset.range n, x ^ i) = x ^ n - 1 := by
+  induction n with
+  | zero =>
+      -- The empty sum is `0`, and `x^0 - 1` is also `0`.
+      simp
+  | succ n ih =>
+      -- Rewrite the successor range sum as the previous range sum plus `x^n`.
+      rw [Finset.sum_range_succ]
+
+      calc
+        (x - 1) * ((∑ i ∈ Finset.range n, x ^ i) + x ^ n)
+            = (x - 1) * (∑ i ∈ Finset.range n, x ^ i) + (x - 1) * x ^ n := by
+              ring
+        _ = (x ^ n - 1) + (x - 1) * x ^ n := by
+              rw [ih]
+        _ = x ^ (n + 1) - 1 := by
+              rw [pow_succ]
+              ring</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>∑ i ∈ Finset.range n, x ^ i</code></dt>
+      <dd>The finite sum $1+x+\cdots+x^{n-1}$.</dd>
+      <dt><code>induction n with</code></dt>
+      <dd>Uses the number of terms as the induction parameter.</dd>
+      <dt><code>Finset.sum_range_succ</code></dt>
+      <dd>Turns the sum over <code>range (n + 1)</code> into the sum over <code>range n</code> plus the new term at index $n$.</dd>
+      <dt><code>rw [ih]</code></dt>
+      <dd>Replaces the previous geometric sum using the induction hypothesis.</dd>
+      <dt><code>rw [pow_succ]</code></dt>
+      <dd>Rewrites $x^{n+1}$ as $x^n x$, putting the expression into a form that <code>ring</code> can normalise.</dd>
+    </dl>
+
+    <p>The first equality distributes $x-1$ over the enlarged sum. The induction hypothesis then collapses the entire old part to $x^n-1$. What remains is the one-line cancellation</p>
+    <p>\[(x^n-1)+(x-1)x^n=x^{n+1}-1.\]</p>
+    <p><code>pow_succ</code> exposes the multiplication inside the new power, and <code>ring</code> checks that final polynomial calculation.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>This is the division-free form of the geometric series identity, stated over $\mathbb Z$. The more common formula $\frac{x^n-1}{x-1}$ needs extra assumptions about division and about $x\ne1$.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

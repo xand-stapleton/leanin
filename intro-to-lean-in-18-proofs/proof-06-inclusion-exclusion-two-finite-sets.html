@@ -1,0 +1,100 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>(s ∪ t).card + (s ∩ t).card = s.card + t.card</code></pre>
+    <blockquote><strong>Read this as:</strong> counting the union and then adding back the overlap gives the same total as counting $s$ and $t$ separately.</blockquote>
+    <p>Classify every relevant element into one of three disjoint regions: only in $s$, only in $t$, or in both. An element in exactly one set contributes once to each side of the equation. An element in both sets contributes twice on the right, once through $|s|$ and once through $|t|$; it also contributes twice on the left, once through the union and once through the intersection.</p>
+    <p>The more familiar rearrangement is $|s\cup t|=|s|+|t|-|s\cap t|$. The displayed theorem avoids subtraction on natural-number cardinalities by moving the intersection term to the left.</p>
+    <p>The Lean proof builds this counting argument from scratch by induction on $s$. When a new element is inserted, there are two cases: it is already in $t$, so only the intersection count increases; or it is not in $t$, so only the union count increases. Either way, both sides increase by one.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof turns a visual counting argument into an induction on a finite set. It shows explicitly why inserting one element preserves the identity.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Induct on the finite set $s$.</li>
+      <li>For the empty set, simplify both sides to $|t|$.</li>
+      <li>In the induction step, insert an element $a$ not already in $s$.</li>
+      <li>Split into the cases $a\in t$ and $a\notin t$.</li>
+      <li>If $a\in t$, the intersection and $s$ each gain one element.</li>
+      <li>If $a\notin t$, the union and $s$ each gain one element.</li>
+      <li>Use the induction hypothesis to finish the resulting cardinality arithmetic.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+Inclusion-exclusion for two finite sets.
+-/
+theorem inclusion_exclusion_two_finite_sets {α : Type} [DecidableEq α]
+    (s t : Finset α) :
+    (s ∪ t).card + (s ∩ t).card = s.card + t.card := by
+  -- Build `s` one element at a time.
+  induction s using Finset.induction_on with
+  | empty =>
+      -- The union with the empty set is `t`; the intersection is empty.
+      simp
+  | @insert a s ha ih =>
+      -- Decide whether the new element is already counted by `t`.
+      by_cases hat : a ∈ t
+      · -- If `a ∈ t`, the intersection and `s` both gain one element.
+        simp [ha, hat]
+        omega
+      · -- If `a ∉ t`, the union and `s` both gain one element.
+        simp [ha, hat]
+        omega</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>[DecidableEq α]</code></dt>
+      <dd>Allows Lean to decide when two elements of <code>α</code> are equal, which finite-set union and intersection need computationally.</dd>
+      <dt><code>Finset α</code></dt>
+      <dd>A finite set of elements of type <code>α</code>.</dd>
+      <dt><code>.card</code></dt>
+      <dd>Counts the elements of a finite set. The dot is Lean's dot notation: <code>s.card</code> is another way to write <code>Finset.card s</code>. Parentheses determine what is counted, so <code>(s ∪ t).card</code> is the number of elements in the whole union.</dd>
+      <dt><code>induction s using Finset.induction_on</code></dt>
+      <dd>Proves the result first for the empty set, then proves that inserting a fresh element preserves it.</dd>
+      <dt><code>| empty =&gt;</code></dt>
+      <dd>The vertical bar <code>|</code> starts one branch of the induction. This branch handles the empty finite set. Here <code>|</code> is Lean syntax; it does not mean absolute value or cardinality.</dd>
+      <dt><code>| @insert a s ha ih =&gt;</code></dt>
+      <dd>Starts the insertion branch. The <code>@</code> asks Lean to expose all the branch arguments so that we can name them. Here <code>a</code> is the new element, <code>s</code> is the smaller finite set, <code>ha</code> proves that <code>a ∉ s</code>, and <code>ih</code> is the induction hypothesis for <code>s</code>. The arrow <code>=&gt;</code> marks the beginning of the proof for this branch.</dd>
+      <dt><code>ha : a ∉ s</code></dt>
+      <dd>Records that the element inserted in the induction step is genuinely new, so the cardinality of $s$ increases by one.</dd>
+      <dt><code>by_cases hat : a ∈ t</code></dt>
+      <dd>Separates the two possible ways the new element contributes to the union and intersection.</dd>
+      <dt><code>simp [ha, hat]</code></dt>
+      <dd>Simplifies insertion, membership and cardinality in the appropriate case.</dd>
+      <dt><code>omega</code></dt>
+      <dd>Uses the induction hypothesis to finish the remaining natural-number arithmetic.</dd>
+    </dl>
+
+    <p>If $a\in t$, inserting $a$ into $s$ does not enlarge $s\cup t$, but it does enlarge $s\cap t$. If $a\notin t$, inserting $a$ enlarges $s\cup t$, but not $s\cap t$. The right-hand side always gains one because $s$ gains one. This is exactly the bookkeeping performed by the two branches.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>For ordinary library code, mathlib already provides the completed inclusion–exclusion theorem. The proof can therefore be shortened to:</p>
+    <pre><code class="language-lean">import Mathlib
+
+open Finset
+
+universe u
+
+theorem inclusion_exclusion_two_finite_sets_via_mathlib
+    {α : Type u} [DecidableEq α] (s t : Finset α) :
+    (s ∪ t).card + (s ∩ t).card = s.card + t.card := by
+  exact Finset.card_union_add_card_inter s t</code></pre>
+    <p>This is the concise version to use when the counting argument itself is not the subject of the proof.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

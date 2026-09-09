@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-GB" data-root="" data-dynamic-title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lean In: Proofs to Learn Lean</title>
+  <meta name="description" content="A personal site about learning Lean and mathlib through concrete mathematical proofs.">
+  <script src="theme-loader.js"></script>
+  <script src="site-header.js?v=20260806" defer></script>
+</head>
+<body>
+  <header class="site-header" data-site-header></header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">An open source public repository of simple proofs</p>
+        <h1><span class="title-main">Lean In:</span><span class="title-subtitle" data-proof-subtitle>Proofs to Learn Lean</span></h1>
+        <p class="lead">A small, concrete set of formal proofs with Lean and mathlib: each designed to introduce slightly more of Lean and the libraries needed to do useful things with it!</p>
+        <div class="actions">
+          <a class="button" href="intro-to-lean-in-18-proofs/index.html">Start the proof route</a>
+          <a class="button secondary" href="lean-neovim-setup.html">Set up Lean in Neovim</a>
+        </div>
+      </div>
+
+      <aside class="route-panel" aria-label="Proof route preview">
+        <p class="eyebrow">The route</p>
+        <ol class="proof-ladder" id="proof-ladder"></ol>
+      </aside>
+    </section>
+
+    <section class="section">
+      <h2>A note on ordering</h2>
+      <p class="section-intro">The opening proofs introduce automation, hypotheses, extensionality, and witnesses. The middle of the collection slowly adds library lemmas, finite sets, induction, abstract algebra, and finite types. The later proofs are actually useful results for, matrices, polynomials, irrationality, graph theory, and (mostly complex) analysis.</p>
+      <div class="proof-grid" id="featured-proofs"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="https://scholar.google.co.uk/citations?user=9FC99s0AAAAJ&amp;hl=en&amp;oi=ao">Google Scholar</a>
+      · <a href="https://inspirehep.net/authors/2684118">INSPIRE-HEP / Spires</a>
+      · <a href="https://orcid.org/0009-0009-6784-7779">ORCID</a>
+      <br>
+      (C) 2026 Alexander G Stapleton
+    </div>
+  </footer>
+
+  <script type="module" src="proofs.js?v=20260812"></script>
+</body>
+</html>

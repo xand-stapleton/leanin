@@ -1,0 +1,177 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>∀ n, ∃ p, Nat.Prime p ∧ n &lt; p</code></pre>
+    <blockquote><strong>Read this as:</strong> no matter how large a natural-number bound $n$ we choose, there is a prime number $p$ beyond it.</blockquote>
+    <p>A standard proof considers $n!+1$. This number has a prime divisor $p$ because all integers have a prime divisor; if $n!+1$ itself is prime, then $n!+1$ is its own prime divisor (I actually missed this point the first time I saw the proof). If $p\le n$, then $p$ appears among the factors of $n!$ (since $n!$ has all integers, and thus all primes, less than itself as factors), so it divides $n!$. By definition, it also divides $n!+1$. Since $a/d + b/d = (a+d)/b$ for all $a,b,d \in \mathbb R$, it would hence also divide their difference 1, which is impossible for a prime. Therefore $n&lt;p$.</p>
+    <p>The Lean proof follows that argument. It constructs the Euclid number, chooses one of its prime divisors, and rules out the possibility that this divisor is at most $n$.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof turns the usual contradiction argument into Lean data: a prime divisor, a divisibility proof for the factorial, and a final contradiction with a prime dividing $1$.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>State the theorem as: for every bound $n$, there is a prime greater than $n$.</li>
+      <li><code>intro n</code> fixes one arbitrary bound; because it was arbitrary, proving the new goal proves the universal statement.</li>
+      <li>Set <code>euclidNumber = n.factorial + 1</code>; it cannot be <code>1</code> because a factorial is positive.</li>
+      <li>Choose a prime divisor <code>p</code> of <code>euclidNumber</code>.</li>
+      <li>Assume <code>p ≤ n</code>. Then <code>Nat.dvd_factorial</code> gives <code>p ∣ n.factorial</code>.</li>
+      <li>Subtract the two divisible numbers to get <code>p ∣ 1</code>, contradicting primality. Thus <code>n &lt; p</code>.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+There are arbitrarily large prime numbers.
+
+This is Euclid's factorial argument, with only the elementary fact that a
+number other than `1` has a prime divisor supplied by mathlib.
+-/
+theorem arbitrarily_large_primes :
+    ∀ n : ℕ, ∃ p : ℕ, Nat.Prime p ∧ n &lt; p := by
+  intro n
+
+  -- Euclid's number is larger than `1`, so it has a prime divisor.
+  let euclidNumber := n.factorial + 1
+  have heuclidNumber_ne_one : euclidNumber ≠ 1 := by
+    dsimp [euclidNumber]
+    intro h
+    have hzero : n.factorial = 0 := by omega
+    exact (Nat.factorial_ne_zero n) hzero
+  obtain ⟨p, hpPrime, hpDivides⟩ :=
+    Nat.exists_prime_and_dvd heuclidNumber_ne_one
+
+  refine ⟨p, hpPrime, ?_⟩
+  by_contra hpAbove
+  have hpLe : p ≤ n := Nat.le_of_not_gt hpAbove
+
+  -- A number at most `n` divides `n!`.
+  have hpDividesFactorial : p ∣ n.factorial :=
+    Nat.dvd_factorial hpPrime.pos hpLe
+
+  -- It also divides `n! + 1`, so it divides their difference, namely `1`.
+  have hpDividesOne : p ∣ 1 := by
+    have hsubtract : p ∣ euclidNumber - n.factorial :=
+      Nat.dvd_sub hpDivides hpDividesFactorial
+    simpa [euclidNumber] using hsubtract
+  exact hpPrime.not_dvd_one hpDividesOne</code></pre>
+  </section>
+
+  <section class="proof-section">
+  <h2>Proof Breakdown</h2>
+
+  <p>
+    The proof follows Euclid's argument: construct <code>n.factorial + 1</code>,
+    choose a prime divisor <code>p</code> of it, and then show that <code>p</code>
+    must be larger than <code>n</code>.
+  </p>
+
+  <dl>
+    <dt><code>∀ n : ℕ, ...</code></dt>
+    <dd>
+      States that the claim holds for every natural number <code>n</code>.
+      <code>intro n</code> introduces an arbitrary such <code>n</code> so that
+      we can prove the claim for it.
+    </dd>
+
+    <dt><code>let euclidNumber := n.factorial + 1</code></dt>
+    <dd>
+      Names Euclid's number so that the later divisibility statements are a
+      little more readable.
+    </dd>
+
+    <dt><code>heuclidNumber_ne_one</code></dt>
+    <dd>
+      Shows that <code>n.factorial + 1 ≠ 1</code>. After
+      <code>intro h</code>, we have the assumption
+      <code>h : n.factorial + 1 = 1</code>. The line
+      <code>have hzero : n.factorial = 0 := by omega</code> uses that
+      assumption to derive <code>n.factorial = 0</code>; it is <strong>not</strong>
+      claiming that factorial is zero in general. This contradicts
+      <code>Nat.factorial_ne_zero n</code>.
+    </dd>
+
+    <dt><code>Nat.exists_prime_and_dvd</code></dt>
+    <dd>
+      Supplies a prime divisor of a natural number other than <code>1</code>.
+      <code>obtain ⟨p, hpPrime, hpDivides⟩</code> unpacks the result into
+      the prime <code>p</code>, a proof that it is prime, and a proof that
+      <code>p ∣ euclidNumber</code>.
+    </dd>
+
+    <dt><code>refine ⟨p, hpPrime, ?_⟩</code></dt>
+    <dd>
+      Supplies <code>p</code> as the required witness and
+      <code>hpPrime</code> as the proof that it is prime. The
+      <code>?_</code> is a placeholder for the remaining goal,
+      <code>n &lt; p</code>.
+    </dd>
+
+    <dt><code>by_contra hpAbove</code></dt>
+    <dd>
+      Proves <code>n &lt; p</code> by contradiction. Instead of proving the
+      inequality directly, we assume that it is false. For natural numbers,
+      the negation of <code>n &lt; p</code> means that <code>p ≤ n</code>.
+      The next line makes this explicit:
+      <code>Nat.le_of_not_gt hpAbove</code> gives
+      <code>hpLe : p ≤ n</code>.
+    </dd>
+
+    <dt><code>Nat.dvd_factorial hpPrime.pos hpLe</code></dt>
+    <dd>
+      Formalises the observation that a positive number no larger than
+      <code>n</code> divides <code>n!</code>. Under the assumption
+      <code>p ≤ n</code>, this gives <code>p ∣ n.factorial</code>.
+    </dd>
+
+    <dt><code>Nat.dvd_sub'</code></dt>
+    <dd>
+      Transfers divisibility from <code>n! + 1</code> and <code>n!</code>
+      to their natural-number difference. Since
+      <code>(n! + 1) - n! = 1</code>, we obtain <code>p ∣ 1</code>,
+      contradicting the fact that a prime cannot divide <code>1</code>.
+    </dd>
+  </dl>
+
+  <p>
+    The key contradiction is therefore: if <code>p ≤ n</code>, then
+    <code>p</code> divides both <code>n!</code> and <code>n! + 1</code>,
+    so it must divide their difference <code>1</code>. Hence
+    <code>p ≤ n</code> is impossible, leaving <code>n &lt; p</code>.
+  </p>
+</section>
+<!--     <h2>Proof Breakdown</h2> -->
+<!--     <dl> -->
+<!--       <dt><code>∀ n : ℕ, ...</code></dt> -->
+<!--       <dd>States that the claim holds for every natural number $n$.</dd> -->
+<!--       <dt><code>let euclidNumber := n.factorial + 1</code></dt> -->
+<!--       <dd>Names Euclid's number so that the later divisibility statements are a little more readable.</dd> -->
+<!--       <dt><code>Nat.exists_prime_and_dvd</code></dt> -->
+<!--       <dd>Supplies a prime divisor of a natural number other than $1$. Unlike the finished Euclid theorem, it does not say that the divisor lies above $n$; the rest of the proof establishes that fact.</dd> -->
+<!--       <dt><code>Nat.Prime p ∧ n &lt; p</code></dt> -->
+<!--       <dd>Combines the two required pieces of evidence: $p$ is prime, and it is larger than the bound.</dd> -->
+<!--       <dt><code>Nat.dvd_factorial hpPrime.pos hpLe</code></dt> -->
+<!--       <dd>Formalises the observation that a positive number no larger than $n$ occurs as a factor of $n!$.</dd> -->
+<!--       <dt><code>Nat.dvd_sub</code></dt> -->
+<!--       <dd>Transfers divisibility from $n!+1$ and $n!$ to their natural-number difference.</dd> -->
+<!--     </dl> -->
+
+<!--     <p>Note that the <code>have hzero : n.factorial = 0 := by omega</code> is not proving that $n!=0$ generically. It is instead proving it under the assumption of h, which we prove to be a contradiction.<p> -->
+<!--     <p>After <code>intro n</code>, the proof turns the existential proof into something concrete: a prime divisor of <code>n.factorial + 1</code>. The remaining goal is <code>n &lt; p</code>. Assuming its negation makes <code>p</code> divide both consecutive numbers <code>n.factorial</code> and <code>n.factorial + 1</code>, which gives the impossible conclusion <code>p ∣ 1</code>.</p> -->
+
+<!--   </section> -->
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>The proof still uses the basic prime-factor fact <code>Nat.exists_prime_and_dvd</code> and standard factorial/divisibility facts. In production code, the shorter <code>exact Nat.exists_prime_gt n</code> is perfectly appropriate; it hides exactly the Euclid argument displayed here.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

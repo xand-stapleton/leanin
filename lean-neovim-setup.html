@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en-GB" data-root="" data-page-title="Set Up Lean in Neovim on macOS">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Set Up Lean in Neovim on macOS | Lean In</title>
+    <meta name="description" content="A lightweight macOS setup guide for using Lean 4 and mathlib in Neovim.">
+    <script src="theme-loader.js"></script>
+    <script src="site-header.js?v=20260806" defer></script>
+  </head>
+  <body>
+    <header class="site-header" data-site-header></header>
+
+    <main>
+      <header class="page-head">
+        <p class="breadcrumb"><a href="index.html">Home</a> / Neovim Setup</p>
+        <p class="eyebrow">macOS guide</p>
+        <h1>Set Up Lean in Neovim</h1>
+        <p class="lead">Setting up a Lean 4 and Neovim environment on macOS.</p>
+      </header>
+
+      <div class="proof-layout">
+        <article class="proof-article">
+          <h2>Why Neovim?</h2>
+        <p>The official Lean installation pages recommend VS Code with the Lean 4 extension, and that is the best route for most people. Basically everyone I know loves VS Code. It's easy and ubiquitous. The Lean extension gives syntax highlighting, completion, and a polished Lean workflow with very little configuration.</p>
+        <p>Even with this, my preference is still Neovim. Maybe it's a little contrary, but the manual installation page also explicitly points to Neovim and <code>lean.nvim</code> as well-supported, so that's nice. I think it's probably worth the little extra effort though. Many of us agree (Neo)Vim is a prime example of almost perfect design, among the echelons of the Bic lighter (or equivalently the Clipper here in the UK), Pentel's P200 series of pencils, Herman Miller's Eames and Aeron chairs, or the humble Lego block. Of course, part of good design is taste, (Neo)Vi(M) is extremely ergonomic and has been my editor of choice since 2016, but part of good design is longevity: Neovim was designed to be the most comfortable and efficient editor possible, as opposed to an ecosystem. It's also available in a terminal over SSH and installs on every platform (that being said VS Code is also exceptionally well supported to give it credit where credit is certainly due). VS Code is open source in important ways, and the Lean extension is undoubtedly excellent, but writing code should not depend too heavily on a project that Microsoft could de-prioritise or reshape to suit their business model. In fact, I was originally rather fond of Atom. Atom was VS Code's predecessor that first introduced the world to Treesitter, but it quickly became a member of the Microsoft graveyard (though Atom was not without its flaws: being a primitive Electron app it was extremely slow for modest files and was horrifically RAM intensive).</p>
+
+          <h2>Install the Tools</h2>
+          <i>This guide assumes that Homebrew is already installed. If this is not the case, follow the instructions on: <a href="https://brew.sh/">brew.sh</a></i>
+          <p>First check that <code>git</code> is available. On modern macOS this may trigger installation of the Xcode Command Line Tools if they are missing:</p>
+          <pre><code>git --version</code></pre>
+
+          <p>Install Neovim if it is not already present:</p>
+          <pre><code>brew install neovim</code></pre>
+
+          <p>Install Lean through <code>elan</code>, the Lean toolchain manager:</p>
+          <pre><code>curl https://elan.lean-lang.org/elan-init.sh -sSf | sh</code></pre>
+
+          <p>Choose the default installation option when prompted, then add the <code>elan</code> executables to the current shell:</p>
+          <pre><code>source $HOME/.elan/env</code></pre>
+
+          <p>Check that Lean and Lake are available:</p>
+          <pre><code>lean --version
+lake --version</code></pre>
+
+          <h2>Add Lean Support to Neovim</h2>
+          <p>The main Neovim plugin is <a href="https://github.com/Julian/lean.nvim">lean.nvim</a>. With Neovim 0.12 or later, its README gives a compact setup using Neovim's built-in package support:</p>
+          <pre><code>vim.pack.add { "https://github.com/Julian/lean.nvim" }
+vim.g.lean_config = { mappings = true }
+</code></pre>
+
+          <i> As an aside, I recently moved to Neovim's built in package manager over Pathogen. I think I prefer Pathogen.</i>
+
+          <h2>Configure the Language Server</h2>
+          <p><code>lean.nvim</code> supplies Neovim's configuration for <code>leanls</code>, Lean's language server, and enables it automatically. If you keep an explicit list of language servers in your Neovim configuration, add <code>leanls</code> after loading the plugin:</p>
+          <pre><code>vim.lsp.enable("leanls")</code></pre>
+
+          <p>There is no separate language-server executable to install. The plugin starts <code>lake serve</code> inside Lake projects and falls back to <code>lean --server</code> for standalone files, so it uses the Lean version selected by the project's <code>lean-toolchain</code> file. After opening a <code>.lean</code> file, run <code>:checkhealth vim.lsp</code> and confirm that <code>leanls</code> appears under the active clients.</p>
+
+          <h2>Try the Infoview</h2>
+          <p>Open a Lean file in the project and try a minimal theorem:</p>
+          <pre><code>example (p q : Prop) : p ∧ q → q ∧ p := by
+  intro h
+  exact ⟨h.2, h.1⟩</code></pre>
+
+          <p>The Infoview opens automatically. To toggle it manually, run <code>:LeanInfoviewToggle</code> or press <kbd>&lt;LocalLeader&gt;i</kbd> (<kbd>\i</kbd> with Neovim's default local leader).</p>
+          <p>Lean's Unicode abbreviations work directly in Insert mode: type <code>\alpha</code> followed by <kbd>Space</kbd> to produce <code>α</code>.</p>
+          <p>The essential feedback loop is: write a line, inspect the goal state, refine the proof, and repeat. That loop is the whole point of using an editor with Lean language-server support rather than treating Lean as a batch compiler.</p>
+
+          <h2>Create a Lean Project</h2>
+          <p>For a small test project, create a new Lake package and build it:</p>
+          <pre><code>lake new foobar
+cd foobar
+lake build</code></pre>
+
+          <h2>Install mathlib in a Project</h2>
+          <p>The mathlib library is installed as a dependency of each project rather than as one global package. For a new mathlib-based project, use the official mathlib template:</p>
+          <pre><code>lake +leanprover-community/mathlib4:lean-toolchain new my-mathlib-project math
+cd my-mathlib-project
+lake exe cache get
+lake build</code></pre>
+
+          <p>The <a href="https://leanprover-community.github.io/install/project.html">Lean community project installation guide</a> also gives this shorter form:</p>
+          <pre><code>lake +v4.24.0 new my_project math</code></pre>
+
+          <p>Here, <code>math</code> adds mathlib to the new project's dependencies. The <code>+v4.24.0</code> prefix selects a sufficiently recent version of Lake for creating the project; it does not determine the Lean version the finished project will use. Enter the new directory and run <code>lake update</code>, followed by the cache and build commands above.</p>
+
+          <p><code>lake exe cache get</code> downloads mathlib's precompiled files. Do not skip it: compiling all of mathlib locally would take much longer. Each project records its own compatible Lean and mathlib versions in <code>lean-toolchain</code> and <code>lake-manifest.json</code>.</p>
+
+          <p>To check the installation, create a file named <code>Main.lean</code> in the project containing:</p>
+          <pre><code>import Mathlib
+
+#check Nat.Prime</code></pre>
+
+          <p>Then compile it using the project's environment:</p>
+          <pre><code>lake env lean Main.lean</code></pre>
+
+          <p>If that command prints the type of <code>Nat.Prime</code> without an import error, mathlib is ready. Open Neovim from the project directory so that <code>leanls</code> selects the same toolchain and dependency set.</p>
+
+          <h2>Existing Projects</h2>
+          <p>If you clone an existing Lean project, enter the project folder and, when it depends on mathlib, fetch the precompiled cache before building:</p>
+          <pre><code>git clone https://github.com/&lt;owner&gt;/&lt;repository&gt;.git
+cd &lt;repository&gt;
+lake exe cache get
+lake build</code></pre>
+
+          <h2>Optional Pre-Configured Dotfiles</h2>
+          <p>If you would rather start from a complete configuration, you can use or borrow from <a href="https://github.com/xand-stapleton/dotfiles-neovim">my Neovim dotfiles</a>. The changes are fairly uncontroversial and stay close to ordinary Neovim, but once Lean itself is installed they provide Lean support out of the box: <code>lean.nvim</code>, language-server completion and diagnostics, the Infoview, and the associated mappings.</p>
+
+          <p>The dotfiles also include Lean and mathlib snippets through <a href="https://github.com/L3MON4D3/LuaSnip">LuaSnip</a>. These provide expandable templates for common structures such as imports, theorems, lemmas, calculation blocks, rewrites, and induction proofs.</p>
+
+          <h2>References</h2>
+          <ul>
+            <li><a href="https://lean-lang.org/install/manual/">Official Lean manual installation page</a></li>
+            <li><a href="https://leanprover-community.github.io/install/project.html">Lean community project installation guide</a></li>
+            <li><a href="https://github.com/Julian/lean.nvim">lean.nvim on GitHub</a></li>
+            <li><a href="https://github.com/leanprover-community/mathlib4/wiki/Using-mathlib4-as-a-dependency">Using mathlib as a project dependency</a></li>
+            <li><a href="https://lean4.dev/">Lean 4 learning portal</a></li>
+            <li><a href="https://leanprover-community.github.io/mathlib4_docs/">mathlib documentation</a></li>
+          </ul>
+        </article>
+
+        <aside class="sidebar">
+          <div class="side-box">
+            <h2>Checklist</h2>
+            <ul>
+              <li>Homebrew available</li>
+              <li>Neovim installed</li>
+              <li>Lean installed via elan</li>
+              <li>Lake available</li>
+              <li>mathlib cache downloaded for the project</li>
+              <li><code>lean.nvim</code> configured</li>
+              <li><code>leanls</code> attached to Lean files</li>
+              <li>First theorem opens with goal feedback</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a href="https://scholar.google.co.uk/citations?user=9FC99s0AAAAJ&amp;hl=en&amp;oi=ao">Google Scholar</a>
+        · <a href="https://inspirehep.net/authors/2684118">INSPIRE-HEP / Spires</a>
+        · <a href="https://orcid.org/0009-0009-6784-7779">ORCID</a>
+        <br>
+        (C) 2026 Alexander G. Stapleton
+      </div>
+    </footer>
+    <script type="module" src="site.js?v=20260812"></script>
+  </body>
+</html>

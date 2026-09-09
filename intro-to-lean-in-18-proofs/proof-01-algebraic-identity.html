@@ -1,0 +1,61 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>(x + y)^2 = x^2 + 2*x*y + y^2</code></pre>
+    <blockquote><strong>Read this as:</strong> for any integers $x$ and $y$, squaring their sum gives the two squares together with the two cross terms.</blockquote>
+
+    <p>By definition, $(x+y)^2=(x+y)(x+y)$. Distributing the first factor gives $x(x+y)+y(x+y)$, and distributing once more gives $x^2+xy+yx+y^2$. Because integer multiplication is commutative, the two middle terms combine to $2xy$.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof shows how Lean handles routine algebra (so long as you specify the field etc).</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Declare $x$ and $y$ to be integers, so all the overloaded arithmetic notation has a definite meaning.</li>
+      <li>State the identity as an equality of ring expressions.</li>
+      <li>Ask Lean's ring normaliser to expand, reorder, and collect terms on both sides.</li>
+      <li>Close the goal when the two normal forms agree.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+The expansion of `(x + y)^2`.
+
+The Lean-specific step is choosing a type where `ring` can normalise polynomial
+expressions.
+-/
+theorem algebraic_identity (x y : ℤ) :
+    (x + y) ^ 2 = x ^ 2 + 2 * x * y + y ^ 2 := by
+  -- `ring` expands, reassociates, reorders, and collects polynomial terms.
+  ring</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>ℤ</code></dt>
+      <dd>Uses the integers as the ambient type, giving Lean a concrete commutative ring to work in.</dd>
+      <dt><code>^</code></dt>
+      <dd>Writes powers. Here <code>(x + y) ^ 2</code> represents the square $(x+y)^2$.</dd>
+      <dt><code>:= by</code></dt>
+      <dd>Starts tactic mode, where the proof is written as a sequence of commands transforming goals.</dd>
+      <dt><code>ring</code></dt>
+      <dd>Solves equalities between polynomial expressions in semirings and rings by normalising both sides. It is a proof-producing tactic: Lean's kernel still checks the proof term it constructs.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>This version proves the identity over <code>ℤ</code>. The same algebraic identity can be stated more generally over any suitable semiring or ring, but the concrete version keeps the first example focused on the <code>ring</code> tactic.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

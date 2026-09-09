@@ -1,0 +1,89 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>a ≤ b → a + c ≤ b + c</code></pre>
+    <blockquote><strong>Read this as:</strong> if $a\le b$, then adding the same integer $c$ to both sides preserves the inequality: $a+c\le b+c$.</blockquote>
+    <p>The distance between the two sides does not change:</p>
+    <p>\[(b+c)-(a+c)=b-a.\]</p>
+    <p>The assumption $a\le b$ says that this difference is nonnegative, so $a+c\le b+c$.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof shows that inequality facts depend on the type of the variables and the ordered algebraic structure available for that type.</p>
+    <p>The inequality is declared as the named theorem parameter <code>h : a ≤ b</code>, so it is already available in the local context when the proof begins.</p>
+  </section>
+
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Work over the integers, where <code>linarith</code> applies directly.</li>
+      <li>Take $a\le b$ as an explicit hypothesis, named <code>h</code>, in the theorem statement.</li>
+      <li>Begin the proof with the goal $a+c\le b+c$ and <code>h</code> already available.</li>
+      <li>Let Lean's linear arithmetic tactic derive the new inequality from <code>h</code>.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+Adding the same integer to both sides preserves an inequality.
+
+This version is concrete: over `ℤ`, `linarith` can recognise the goal as linear
+arithmetic.
+-/
+theorem ordered_arithmetic (a b c : ℤ) (h : a ≤ b) :
+    a + c ≤ b + c := by
+  linarith</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>(h : a ≤ b)</code></dt>
+      <dd>Declares $a\le b$ as a named hypothesis, making <code>h</code> available as soon as the proof starts.</dd>
+      <dt><code>linarith</code></dt>
+      <dd>Combines linear equalities and inequalities from the local context.</dd>
+      <dt><code>(a b c : ℤ)</code></dt>
+      <dd>Declares all three variables as integers, which tells Lean exactly which arithmetic theory to use.</dd>
+    </dl>
+
+    <p>At the start, the context already contains <code>h : a ≤ b</code> and Lean displays the goal <code>⊢ a + c ≤ b + c</code>. Mathematically, these are the assumption $a\le b$ and target $a+c\le b+c$. The final tactic uses <code>h</code> and leaves no goals.</p>
+    <p>A more theorem-driven proof can replace <code>linarith</code> with <code>exact add_le_add_right h c</code>. The two versions teach complementary habits: use a named monotonicity lemma when you know it, or use linear-arithmetic automation when several simple inequalities must be combined.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Version</h2>
+    <p>For natural numbers, Lean's core library already contains the monotonicity lemma needed for the same proof idea, so this version does not import mathlib.</p>
+    <pre><code class="language-lean">/--
+Native Lean version over natural numbers.
+-/
+theorem native_ordered_arithmetic (a b c : Nat) (h : a ≤ b) :
+    a + c ≤ b + c := by
+  exact Nat.add_le_add_right h c</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Breakdown</h2>
+    <dl>
+      <dt><code>Nat</code></dt>
+      <dd>Uses Lean's built-in natural numbers rather than mathlib's broader ordered algebra hierarchy.</dd>
+      <dt><code>(h : a ≤ b)</code></dt>
+      <dd>Names the inequality hypothesis directly in the theorem statement.</dd>
+      <dt><code>Nat.add_le_add_right h c</code></dt>
+      <dd>The core Lean theorem saying that adding the same natural number on the right preserves $\le$.</dd>
+      <dt><code>exact</code></dt>
+      <dd>Closes the goal with that monotonicity theorem.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>The theorem is stated over <code>ℤ</code> to keep the proof short. A more general version would use an ordered algebraic typeclass, and the proof might use a library lemma such as addition monotonicity instead of <code>linarith</code>. Not that it's really any better, but I suppose one could also use <code>omega</code> instead of ring, too.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

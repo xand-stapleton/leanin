@@ -1,0 +1,96 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>Nat.Coprime n (n + 1)</code></pre>
+    <blockquote><strong>Read this as:</strong> the only positive natural number dividing both $n$ and its successor $n+1$ is $1$; equivalently, $\gcd(n,n+1)=1$.</blockquote>
+    <p>Let $d$ divide both $n$ and $n+1$. A common divisor also divides their difference, and $(n+1)-n=1$. Therefore $d$ divides $1$, forcing $d=1$. This is the familiar paper proof.</p>
+    <p>The Lean proof follows that argument directly, taking $d=\gcd(n,n+1)$. By definition, this $d$ divides both numbers. It therefore divides their difference, so it divides $1$ and must equal $1$.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof turns the usual divisibility argument into explicit Lean steps. It uses only basic facts about greatest common divisors, subtraction and divisibility.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Unfold coprimality into the goal $\gcd(n,n+1)=1$.</li>
+      <li>It is enough to prove that $\gcd(n,n+1)$ divides $1$.</li>
+      <li>Record that the gcd divides both $n$ and $n+1$.</li>
+      <li>Use those two facts to show that it divides $(n+1)-n$.</li>
+      <li>Simplify the difference to $1$ and conclude that the gcd equals $1$.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+Consecutive natural numbers are coprime.
+
+The mathematical idea is that any common divisor of `n` and `n + 1` must divide
+their difference, hence must divide `1`.
+-/
+theorem consecutive_naturals_coprime (n : ℕ) :
+    Nat.Coprime n (n + 1) := by
+  -- Coprimality means that the greatest common divisor is `1`.
+  show Nat.gcd n (n + 1) = 1
+
+  -- A natural number that divides `1` must itself be `1`.
+  apply Nat.eq_one_of_dvd_one
+
+  -- The gcd divides each of the two original numbers.
+  have hleft : Nat.gcd n (n + 1) ∣ n :=
+    Nat.gcd_dvd_left n (n + 1)
+  have hright : Nat.gcd n (n + 1) ∣ n + 1 :=
+    Nat.gcd_dvd_right n (n + 1)
+
+  -- A common divisor divides the difference of the two numbers.
+  have hdifference : Nat.gcd n (n + 1) ∣ (n + 1) - n :=
+    Nat.dvd_sub' hright hleft
+
+  -- The difference of consecutive numbers is `1`.
+  have hdifference_eq : (n + 1) - n = 1 := by
+    omega
+  rw [hdifference_eq] at hdifference
+  exact hdifference</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>Nat.Coprime n (n + 1)</code></dt>
+      <dd>States that $\gcd(n,n+1)=1$.</dd>
+      <dt><code>show Nat.gcd n (n + 1) = 1</code></dt>
+      <dd>Exposes the definition of coprimality as a statement about the greatest common divisor.</dd>
+      <dt><code>Nat.eq_one_of_dvd_one</code></dt>
+      <dd>Reduces the equality goal to proving that the gcd divides $1$.</dd>
+      <dt><code>Nat.gcd_dvd_left</code> and <code>Nat.gcd_dvd_right</code></dt>
+      <dd>Give the two defining divisibility properties of the gcd.</dd>
+      <dt><code>Nat.dvd_sub'</code></dt>
+      <dd>Says that a number dividing two natural numbers also divides their difference.</dd>
+      <dt><code>hdifference_eq</code></dt>
+      <dd>Proves the elementary equality $(n+1)-n=1$ explicitly.</dd>
+      <dt><code>rw [hdifference_eq] at hdifference</code></dt>
+      <dd>Rewrites the difference as $1$ without simplifying away the divisibility evidence.</dd>
+      <dt><code>exact hdifference</code></dt>
+      <dd>Uses the rewritten divisibility fact to close the goal.</dd>
+    </dl>
+    
+    <p>The proof does not call a theorem saying that consecutive numbers are coprime. Instead, <code>hleft</code> and <code>hright</code> say that the gcd is a common divisor, while <code>hdifference</code> says that it divides the difference. The last line performs the elementary calculation $(n+1)-n=1$.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>For ordinary library code, mathlib already has a theorem for this pattern. The same result can therefore be written more quickly as follows:</p>
+    <pre><code class="language-lean">theorem consecutive_naturals_coprime_via_named_lemma (n : ℕ) :
+    Nat.Coprime n (n + 1) := by
+  simpa using
+    (Nat.coprime_self_add_right (m := n) (n := 1))</code></pre>
+    <p>This version is shorter, but it requires knowing <code>Nat.coprime_self_add_right</code> and hides the divisor argument inside that library theorem.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

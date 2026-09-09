@@ -1,0 +1,120 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>s ∩ t = t ∩ s</code></pre>
+    <blockquote><strong>Read this as:</strong> the elements that belong to both $s$ and $t$ are exactly the elements that belong to both $t$ and $s$. The order in which we name the two sets does not matter.</blockquote>
+    <p>Two sets are equal when they have the same members. So choose an arbitrary element $x$. If $x\in s\cap t$, then we have two facts: $x\in s$ and $x\in t$. To prove $x\in t\cap s$, we give those same two facts in the opposite order. The reverse implication is identical.</p>
+    <p>The proof is therefore really the logical fact $P\land Q\iff Q\land P$, with $P$ standing for $x\in s$ and $Q$ standing for $x\in t$.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof introduces two everyday mathlib workflows: prove set equality element by element, then let the simplifier handle membership statements.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Use set extensionality to replace $s\cap t=t\cap s$ with a membership statement about an arbitrary element $x$.</li>
+      <li>Lean changes the goal to $x\in s\cap t\iff x\in t\cap s$.</li>
+      <li>Split the if-and-only-if into its two directions.</li>
+      <li>In each direction, unpack the pair of membership proofs and rebuild it in the opposite order.</li>
+    </ol>
+  </section>
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+open Set
+
+/--
+Set intersection is commutative.
+-/
+theorem set_intersection_commutative {α : Type u} (s t : Set α) :
+    s ∩ t = t ∩ s := by
+  -- It is enough to prove that an arbitrary `x` belongs to the left-hand set
+  -- exactly when it belongs to the right-hand set.
+  ext x
+
+  -- Goal: x ∈ s ∩ t ↔ x ∈ t ∩ s
+  constructor
+
+  · -- Forward direction: assume x ∈ s ∩ t.
+    intro hx
+    -- `hx.1 : x ∈ s` and `hx.2 : x ∈ t`.
+    -- The target asks for the same evidence in the order t, then s.
+    exact ⟨hx.2, hx.1⟩
+
+  · -- Reverse direction: assume x ∈ t ∩ s.
+    intro hx
+    -- Now `hx.1 : x ∈ t` and `hx.2 : x ∈ s`.
+    exact ⟨hx.2, hx.1⟩</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <!-- <dt><code>universe u</code> and <code>Type u</code></dt> -->
+      <!-- <dd>Keep the theorem universe-polymorphic using standard Lean 4 syntax.</dd> -->
+      <!-- <dt><code>open Set</code></dt> -->
+      <!-- <dd>Brings set-related notation and names into the current namespace.</dd> -->
+      <dt><code>ext x</code></dt>
+      <dd>Uses set extensionality: to prove two sets equal, prove that an arbitrary element $x$ belongs to one exactly when it belongs to the other.</dd>
+      <dt><code>constructor</code></dt>
+      <dd>An $\iff$ goal contains two implications. <code>constructor</code> asks us to prove the forward implication first and the reverse implication second.</dd>
+      <dt><code>intro hx</code></dt>
+      <dd>Moves the assumption for the current implication into the local context and names its proof <code>hx</code>.</dd>
+      <dt><code>hx.1</code> and <code>hx.2</code></dt>
+      <dd>Membership in an intersection is a conjunction, so its proof contains two components. Dot notation selects the first or second component.</dd>
+      <dt><code>⟨hx.2, hx.1⟩</code></dt>
+      <dd>Angle brackets construct the conjunction required by the target. The order is reversed because the target intersection is $t\cap s$.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Version</h2>
+    <p>The same proof can be written without mathlib by representing a set as a predicate and defining intersection directly.</p>
+    <pre><code class="language-lean">def NativeSet (α : Type) := α → Prop
+
+def NativeInter {α : Type} (s t : NativeSet α) : NativeSet α :=
+  fun x => s x ∧ t x
+
+/--
+Native Lean version: no mathlib set extensionality tactic is needed.
+-/
+theorem native_set_intersection_commutative {α : Type}
+    (s t : NativeSet α) :
+    NativeInter s t = NativeInter t s := by
+  funext x
+  apply propext
+  constructor
+  · intro hx
+    exact ⟨hx.2, hx.1⟩
+  · intro hx
+    exact ⟨hx.2, hx.1⟩</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Breakdown</h2>
+    <dl>
+      <dt><code>NativeSet α := α → Prop</code></dt>
+      <dd>Represents a set by the proposition that an element belongs to it.</dd>
+      <dt><code>NativeInter</code></dt>
+      <dd>Defines intersection as conjunction of the two membership predicates.</dd>
+      <dt><code>funext x</code></dt>
+      <dd>Proves equality of predicates by proving equality at an arbitrary input <code>x</code>.</dd>
+      <dt><code>propext</code></dt>
+      <dd>Turns a logical equivalence between propositions into equality of propositions.</dd>
+      <dt><code>constructor</code> and <code>⟨hx.2, hx.1⟩</code></dt>
+      <dd>Once functions and propositions have been made explicit, the native proof finishes with exactly the same pair-swapping argument as the mathlib proof.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>This proof is deliberately explicit. Once the logical structure is familiar, the body can be shortened to <code>ext x; simp [and_comm]</code>; when you only need the result, mathlib already provides <code>Set.inter_comm</code>.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

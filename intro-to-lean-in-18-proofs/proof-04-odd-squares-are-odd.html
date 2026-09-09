@@ -1,0 +1,88 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>Odd n → Odd (n^2)</code></pre>
+    <blockquote><strong>Read this as:</strong> if a natural number $n$ has the form “twice a number plus one”, then its square also has that form.</blockquote>
+    <p>Suppose $n=2k+1$. Then</p>
+    <p>\[
+      \begin{aligned}
+      n^2 &amp;= (2k+1)^2 \\
+          &amp;= 4k^2+4k+1 \\
+          &amp;= 2(2k^2+2k)+1.
+      \end{aligned}
+    \]</p>
+    <p>The last line does a couple of things. Firstly, it says the square is odd; secondly it exhibits the witness $2k^2+2k$, which is precisely what Lean asks us to provide.</p>
+
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof shows how to unpack an existential hypothesis and then provide a new witness for an existential goal.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Unpack the hypothesis that $n$ is odd into a witness $k$ and an equation for $n$.</li>
+      <li>Notice that the goal is another existential statement, now asking for a witness for the oddness of $n^2$.</li>
+      <li>Choose $2k^2+2k$ as that witness.</li>
+      <li>Rewrite $n$ using the oddness equation.</li>
+      <li>Finish by polynomial arithmetic.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+/--
+The square of an odd natural number is odd.
+
+The proof turns the hypothesis `Odd n` into data, then supplies a witness for
+`Odd (n ^ 2)`.
+-/
+theorem odd_square_is_odd (n : ℕ) :
+    Odd n → Odd (n ^ 2) := by
+  -- Unpack the existential hidden inside `Odd n`.
+  rintro ⟨k, hk⟩
+
+  -- If `n = 2*k + 1`, then `n^2 = 2*(2*k*k + 2*k) + 1`.
+  use 2 * k * k + 2 * k
+
+  -- Replace `n` by its odd form and let arithmetic finish.
+  rw [hk]
+  ring</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>Odd n</code></dt>
+      <dd>Means there exists some witness $k$ with $n=2k+1$.</dd>
+      <dt><code>rintro ⟨k, hk⟩</code></dt>
+      <dd>Introduces the oddness hypothesis and immediately destructures it into a witness <code>k</code> and equation <code>hk</code>.</dd>
+      <dt><code>use ...</code></dt>
+      <dd>Supplies the witness required by an existential goal. After this line, Lean no longer asks whether some witness exists; it asks us to verify the equation for this particular choice.</dd>
+      <dt><code>rw [hk]</code></dt>
+      <dd>Rewrites the goal using the equation that describes <code>n</code>.</dd>
+      <dt><code>ring</code></dt>
+      <dd>Checks the remaining polynomial identity.</dd>
+    </dl>
+
+    <p>This proof is a useful model for statements of the form $(\exists k, P(k))\Rightarrow(\exists m,Q(m))$. The hypothesis is evidence we may unpack; the conclusion is evidence we must build. Here <code>rintro</code> performs the unpacking, and <code>use</code> begins the construction.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>The explicit proof above is useful for learning how existential witnesses work. In ordinary mathlib code, the general theorem <code>Odd.pow</code> can handle that witness internally:</p>
+    <pre><code class="language-lean">/--
+Library-style version: powers of odd elements are already known to be odd.
+-/
+theorem odd_square_is_odd_via_mathlib (n : ℕ) (hn : Odd n) :
+    Odd (n ^ 2) := by
+  exact hn.pow</code></pre>
+    <p><code>hn.pow</code> is dot notation for <code>Odd.pow hn</code>. It proves that $n^e$ is odd for any natural exponent $e$, and Lean infers $e=2$ from the goal. The existential witness still exists inside the proof of the library theorem; this version simply reuses that abstraction instead of constructing it again.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>
