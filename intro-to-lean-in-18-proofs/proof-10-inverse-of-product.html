@@ -1,0 +1,168 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>(a * b)⁻¹ = b⁻¹ * a⁻¹</code></pre>
+    <blockquote><strong>Read this as:</strong> to undo the product “first $a$, then $b$”, undo $b$ first and $a$ second. Inverses reverse the order of multiplication.</blockquote>
+    <p>To show that $b^{-1}a^{-1}$ is the inverse of $ab$, multiply them and simplify:</p>
+    <p>\[
+      \begin{aligned}
+      (ab)(b^{-1}a^{-1})
+        &amp;=a(bb^{-1})a^{-1}\\
+        &amp;=a1a^{-1}\\
+        &amp;=1.
+      \end{aligned}
+    \]</p>
+    <p>A symmetric calculation gives $(b^{-1}a^{-1})(ab)=1$. By uniqueness of inverses, $b^{-1}a^{-1}$ must equal $(ab)^{-1}$. Notice that no commutativity is used: only associativity and the inverse laws.</p>
+  </section>
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>This proof introduces basic group reasoning: associativity, inverses, and the difference between a manual proof and group automation.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Work in an arbitrary group.</li>
+      <li>Regard $b^{-1}a^{-1}$ as the candidate inverse of $ab$.</li>
+      <li>Prove directly that $(ab)(b^{-1}a^{-1})=1$ by reassociating the factors and cancelling adjacent inverse pairs.</li>
+      <li>Insert this right-inverse calculation next to the known inverse $(ab)^{-1}$, then cancel $(ab)^{-1}(ab)$.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib
+
+theorem inverse_of_product {G : Type u} [Group G] (a b : G) :
+    (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
+  -- First step: establish the helper fact that abb⁻¹a⁻¹ = 1, i.e. b⁻¹ a⁻¹ is
+  -- the right inverse of ab
+  have hright : (a * b) * (b⁻¹ * a⁻¹) = 1 := by
+    calc
+      (a * b) * (b⁻¹ * a⁻¹) = a * (b * b⁻¹) * a⁻¹ := by
+        simp only [mul_assoc]
+      _ = a * 1 * a⁻¹ := by
+        rw [mul_inv_cancel]
+      _ = a * a⁻¹ := by
+        rw [mul_one]
+      _ = 1 := by
+        rw [mul_inv_cancel]
+  -- Second step: show that (ab)⁻¹ is b⁻¹ a⁻¹.
+  calc
+    (a * b)⁻¹ = (a * b)⁻¹ * 1 := by
+      rw [mul_one]
+    _ = (a * b)⁻¹ * ((a * b) * (b⁻¹ * a⁻¹)) := by
+      rw [hright]
+    _ = ((a * b)⁻¹ * (a * b)) * (b⁻¹ * a⁻¹) := by
+      rw [← mul_assoc]
+    _ = 1 * (b⁻¹ * a⁻¹) := by
+      rw [inv_mul_cancel]
+    _ = b⁻¹ * a⁻¹ := by
+      rw [one_mul]
+</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <dl>
+      <dt><code>[Group G]</code></dt>
+      <dd>Gives Lean multiplication, identity, inverses, associativity, and the inverse laws for <code>G</code>.</dd>
+      <dt><code>(a * b)⁻¹</code></dt>
+      <dd>The inverse of the product, not the product of the inverses in the original order.</dd>
+      <dt><code>b⁻¹ * a⁻¹</code></dt>
+      <dd>The candidate inverse $b^{-1}a^{-1}$ obtained by reversing the order of the factors.</dd>
+      <dt><code>hright</code></dt>
+      <dd>Proves directly that $b^{-1}a^{-1}$ is a right inverse of $ab$.</dd>
+      <dt><code>mul_assoc</code></dt>
+      <dd>Reassociates factors so that $bb^{-1}$ becomes an adjacent pair; it never changes their order.</dd>
+      <dt><code>mul_inv_cancel</code> and <code>inv_mul_cancel</code></dt>
+      <dd>Apply the two inverse laws only after the relevant factors have been made adjacent.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Automation and the Native Proof</h2>
+    <p>The main Lean proof follows the displayed calculation explicitly. The native version below goes one step further: it defines a tiny group structure so that the only available facts are exactly the axioms used by the proof. In both versions, the key move is to name $b^{-1}a^{-1}$ as the candidate and prove that it is a right inverse of $ab$.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Version</h2>
+    <p>Lean itself does not ship with mathlib's group hierarchy, but the identity can be proved in native Lean after defining the tiny fragment of group structure needed for the argument.</p>
+    <pre><code class="language-lean">structure NativeGroup where
+  carrier : Type
+  mul : carrier → carrier → carrier
+  one : carrier
+  inv : carrier → carrier
+  mul_assoc : ∀ a b c, mul (mul a b) c = mul a (mul b c)
+  one_mul : ∀ a, mul one a = a
+  mul_one : ∀ a, mul a one = a
+  inv_mul_cancel : ∀ a, mul (inv a) a = one
+  mul_inv_cancel : ∀ a, mul a (inv a) = one
+
+namespace NativeGroup
+
+variable (G : NativeGroup)
+
+theorem native_inverse_of_product (a b : G.carrier) :
+    G.inv (G.mul a b) = G.mul (G.inv b) (G.inv a) := by
+  let candidate := G.mul (G.inv b) (G.inv a)
+
+  have hright : G.mul (G.mul a b) candidate = G.one := by
+    change G.mul (G.mul a b) (G.mul (G.inv b) (G.inv a)) = G.one
+    calc
+      G.mul (G.mul a b) (G.mul (G.inv b) (G.inv a))
+          = G.mul a (G.mul b (G.mul (G.inv b) (G.inv a))) := by
+              rw [G.mul_assoc a b (G.mul (G.inv b) (G.inv a))]
+      _ = G.mul a (G.mul (G.mul b (G.inv b)) (G.inv a)) := by
+              rw [← G.mul_assoc b (G.inv b) (G.inv a)]
+      _ = G.mul a (G.mul G.one (G.inv a)) := by
+              rw [G.mul_inv_cancel]
+      _ = G.mul a (G.inv a) := by
+              rw [G.one_mul]
+      _ = G.one := by
+              rw [G.mul_inv_cancel]
+
+  calc
+    G.inv (G.mul a b)
+        = G.mul (G.inv (G.mul a b)) G.one := by
+            rw [G.mul_one]
+    _ = G.mul (G.inv (G.mul a b)) (G.mul (G.mul a b) candidate) := by
+            rw [hright]
+    _ = G.mul (G.mul (G.inv (G.mul a b)) (G.mul a b)) candidate := by
+            rw [← G.mul_assoc (G.inv (G.mul a b)) (G.mul a b) candidate]
+    _ = G.mul G.one candidate := by
+            rw [G.inv_mul_cancel]
+    _ = candidate := by
+            rw [G.one_mul]
+    _ = G.mul (G.inv b) (G.inv a) := rfl
+
+end NativeGroup</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Native Lean Breakdown</h2>
+    <dl>
+      <dt><code>structure NativeGroup</code></dt>
+      <dd>Defines exactly the operations and axioms used by the proof.</dd>
+      <dt><code>let candidate := ...</code></dt>
+      <dd>Names the expected inverse $b^{-1}a^{-1}$.</dd>
+      <dt><code>hright</code></dt>
+      <dd>Proves that <code>candidate</code> is a right inverse of $ab$. The subsequent calculation compares this candidate with the inverse operation already supplied by the structure.</dd>
+      <dt><code>calc</code></dt>
+      <dd>Writes the group manipulation as a chain of equalities.</dd>
+      <dt><code>rw [G.mul_assoc]</code></dt>
+      <dd>Reassociates products so that inverse pairs become adjacent. Reassociation changes parentheses, never the order of the factors.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveats</h2>
+    <h3>For the Mathlib proof:</h3>
+    <p>This is horrendously verbose and could be compactified into a line or two. This is also a fairly trivial lemma available in Mathlib. In fact, such a proof is exactly the type that would be given by AI a few years ago when it was in its infancy. I chose to do it in such a round-about way as a means of showing off the `calc` tactic which I don't think we've seen so far. It's nice to be able to convert a pen-and-paper proof into something in Lean; albeit, I'd certainly NOT do this in production though except in special circumstances.</p>
+
+    <p>The explicit proof is useful when the cancellation order is the lesson. In ordinary Lean mathematics, the same identity can be shortened to <code>by group</code>; that is an appropriate caveat when this group calculation is only a supporting step.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260812"></script>

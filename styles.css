@@ -255,6 +255,14 @@ h1 {
   font-size: clamp(2rem, 4vw, 3.4rem);
 }
 
+.proof-section h2 {
+  margin-bottom: 1rem;
+}
+
+.proof-section h3 {
+  margin-top: 0;
+}
+
 .section-intro {
   max-width: 760px;
   margin: 18px 0 0;
