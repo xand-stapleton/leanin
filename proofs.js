@@ -1,4 +1,4 @@
-import { proofIndex } from "./proof-index.js?v=20260812";
+import { comingSoonProofNumbers, proofIndex } from "./proof-index.js?v=20260911";
 import {
   initSiteChrome,
   proofRouteLabel,
@@ -24,6 +24,10 @@ function proofUrl(proof) {
   return `${rootPrefix}intro-to-lean-in-18-proofs/${proofFileName(proof)}`;
 }
 
+function isComingSoon(proof) {
+  return comingSoonProofNumbers.includes(proof.number);
+}
+
 function tagsHtml(ideas) {
   return ideas.map((idea) => `<span class="tag">${idea}</span>`).join("");
 }
@@ -32,20 +36,27 @@ function renderProofCards(targetId, limit) {
   const target = document.getElementById(targetId);
   if (!target) return;
   const shown = limit ? proofIndex.slice(0, limit) : proofIndex;
-  target.innerHTML = shown.map((proof) => `
-    <a class="proof-card" href="${proofUrl(proof)}">
+  target.innerHTML = shown.map((proof) => {
+    const comingSoon = isComingSoon(proof);
+    const content = `
       <span class="proof-number">${String(proof.number).padStart(2, "0")}</span>
       <h3>${proof.title}</h3>
       <p>${proof.summary}</p>
-      <div class="tag-row">${tagsHtml(proof.ideas.slice(0, 3))}</div>
-    </a>
-  `).join("");
+      <div class="tag-row">${comingSoon ? '<span class="tag coming-soon-label">Coming soon</span>' : ""}${tagsHtml(proof.ideas.slice(0, 3))}</div>`;
+
+    return comingSoon
+      ? `<article class="proof-card proof-card--coming-soon">${content}</article>`
+      : `<a class="proof-card" href="${proofUrl(proof)}">${content}</a>`;
+  }).join("");
 }
 
 function renderProofLadder(targetId) {
   const target = document.getElementById(targetId);
   if (!target) return;
-  target.innerHTML = proofIndex.map((proof) => `<li><a href="${proofUrl(proof)}">${proof.title}</a></li>`).join("");
+  target.innerHTML = proofIndex.map((proof) => isComingSoon(proof)
+    ? `<li class="proof-ladder--coming-soon"><span>${proof.title} <small>Coming soon</small></span></li>`
+    : `<li><a href="${proofUrl(proof)}">${proof.title}</a></li>`
+  ).join("");
 }
 
 function plainTitle(proof) {
@@ -69,8 +80,9 @@ function renderProofSourcePage() {
   if (!proof) return;
 
   const currentIndex = proofIndex.indexOf(proof);
-  const prev = proofIndex[currentIndex - 1];
-  const next = proofIndex[currentIndex + 1];
+  // Skip unpublished proofs in either direction, keeping the catalogue order.
+  const prev = proofIndex.slice(0, currentIndex).reverse().find((item) => !isComingSoon(item));
+  const next = proofIndex.slice(currentIndex + 1).find((item) => !isComingSoon(item));
   const proofHtml = source.innerHTML;
 
   document.title = `${plainTitle(proof)} | ${seriesTitle}`;
@@ -109,9 +121,10 @@ function renderProofSourcePage() {
           <div class="side-box">
             <h2>All Proofs</h2>
             <ul>
-              ${proofIndex.map((item) => `
-                <li><a href="${proofUrl(item)}" ${item.number === proof.number ? 'aria-current="page"' : ""}>${String(item.number).padStart(2, "0")}. ${item.title}</a></li>
-              `).join("")}
+              ${proofIndex.map((item) => isComingSoon(item)
+                ? `<li class="proof-list--coming-soon">${String(item.number).padStart(2, "0")}. ${item.title} <small>Coming soon</small></li>`
+                : `<li><a href="${proofUrl(item)}" ${item.number === proof.number ? 'aria-current="page"' : ""}>${String(item.number).padStart(2, "0")}. ${item.title}</a></li>`
+              ).join("")}
             </ul>
           </div>
         </aside>

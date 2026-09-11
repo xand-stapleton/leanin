@@ -113,6 +113,10 @@ a:hover {
   color: var(--accent-strong);
 }
 
+.ancient-mode-notice {
+  display: none;
+}
+
 main {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
@@ -246,6 +250,17 @@ h1 {
   text-decoration: none;
 }
 
+.proof-ladder--coming-soon {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.proof-ladder--coming-soon small,
+.proof-list--coming-soon small {
+  color: var(--gold);
+  font-weight: 800;
+}
+
 .section {
   padding: 72px 0;
   border-top: 1px solid rgba(217, 210, 196, 0.8);
@@ -295,6 +310,17 @@ h1 {
   transform: translateY(-1px);
 }
 
+.proof-card--coming-soon {
+  color: var(--muted);
+  background: rgba(248, 245, 236, 0.72);
+}
+
+.proof-card--coming-soon:hover {
+  border-color: var(--line);
+  box-shadow: 0 8px 22px rgba(35, 31, 24, 0.04);
+  transform: none;
+}
+
 .proof-number {
   display: inline-grid;
   width: 34px;
@@ -337,6 +363,11 @@ h1 {
   color: #234d75;
   font-size: 0.74rem;
   font-weight: 750;
+}
+
+.coming-soon-label {
+  color: var(--gold);
+  font-weight: 800;
 }
 
 .page-head {
@@ -438,6 +469,12 @@ code {
 
 .side-box a[aria-current="page"] {
   color: var(--accent-strong);
+}
+
+.proof-list--coming-soon {
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 650;
 }
 
 .prev-next {

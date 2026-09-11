@@ -1,0 +1,318 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>Tendsto
+  (fun R ↦ ∫ θ in 0..Real.pi,
+    upperSemicircleIntegrand a R f θ)
+  atTop (𝓝 0)</code></pre>
+    <blockquote><strong>Read this as:</strong> fix $a&gt;0$ and integrate $e^{iaz}f(z)$ anticlockwise along the upper semicircle of radius $R$. If $f$ is bounded on that arc by a nonnegative quantity $M(R)$, and $M(R)\to0$, then the contour integral tends to $0$ as $R\to\infty$.</blockquote>
+    <p>Write a point of the upper semicircle as $z=Re^{i\theta}$, where $0\le\theta\le\pi$. Its differential contributes a factor of norm $R$, while</p>
+    <p>\[\left|e^{iaz}\right|=e^{-aR\sin\theta}.\]</p>
+    <p>The sine vanishes at the endpoints, so bounding the exponential by $1$ would leave an unwanted factor of $R$. Instead, split the arc at $\pi/2$. On the left half, the sine inequality $\sin\theta\ge2\theta/\pi$ gives a bound we can integrate explicitly. Set $k=2aR/\pi&gt;0$; then</p>
+    <p>\[
+      \begin{aligned}
+      \left|\int_0^{\pi/2} F_R(\theta)\,d\theta\right|
+        &amp;\le RM(R)\int_0^{\pi/2} e^{-k\theta}\,d\theta\\
+        &amp;=\frac{RM(R)}{k}\left(1-e^{-k\pi/2}\right)\\
+        &amp;\le\frac{\pi}{2a}M(R),
+      \end{aligned}
+    \]</p>
+    <p>where $F_R(\theta)$ is the parameterised contour integrand. The radius cancels against $k$: this is the key estimate. On the right half, substitute $u=\pi-\theta$ and use $\sin(\pi-u)=\sin u$ to reuse the same bound.</p>
+    <p>Adding the two halves gives</p>
+    <p>\[\left|\int_{\text{upper semicircle}} e^{iaz}f(z)\,dz\right|\le\frac{\pi}{a}M(R).\]</p>
+    <p>Since $M(R)\to0$, the contour integral tends to zero.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>Jordan's lemma is the standard device that makes many Fourier- and Laplace-type contour integrals work. It shows precisely how the exponential factor damps the large semicircular arc, leaving only the real-axis integral and the residues inside the contour.</p>
+    <p>In Lean, the useful pattern is to prove one quantitative estimate, reuse it through a change of variables, and finish with the squeeze theorem. We build the arc estimate below from the sine inequality and elementary calculus; no library version of Jordan's lemma is invoked.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Parameterise the upper semicircle and compute the norm of its integrand.</li>
+      <li>Evaluate $\int_0^b e^{-kx}\,dx$ using its antiderivative.</li>
+      <li>Use $2\theta/\pi\le\sin\theta$ to bound the left-half integral by $\frac{\pi}{2a}M(R)$.</li>
+      <li>Reflect the right half using $u=\pi-\theta$ and reuse the same estimate.</li>
+      <li>Split the full integral and apply the triangle inequality to obtain $\frac{\pi}{a}M(R)$.</li>
+      <li>Apply the squeeze theorem, since this bound tends to zero.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <p>The helpers follow the outline above. Read <code>jordans_lemma</code> at the end for the complete statement, including the arc bound and integrability assumptions. The whole code block can be copied into one Lean file.</p>
+    <pre><code class="language-lean">import Mathlib
+
+open MeasureTheory Filter Set
+open scoped Real Topology Interval
+
+namespace LeanIn
+
+/-- The contour integrand after writing `z = R * exp (θ * I)`.
+The factor `z * I` is the tangent `dz/dθ`, so its norm contributes `R`. -/
+noncomputable def upperSemicircleIntegrand
+    (a R : ℝ) (f : ℂ → ℂ) (θ : ℝ) : ℂ :=
+  (circleMap 0 R θ * Complex.I) *
+    (Complex.exp (Complex.I * (a : ℂ) * circleMap 0 R θ) *
+      f (circleMap 0 R θ))
+
+/-- Taking norms exposes the real exponential that damps the upper arc. -/
+lemma norm_upperSemicircleIntegrand (a R : ℝ) (hR : 0 &lt; R)
+    (f : ℂ → ℂ) (θ : ℝ) :
+    ‖upperSemicircleIntegrand a R f θ‖ =
+      R * Real.exp (-a * R * Real.sin θ) *
+        ‖f (circleMap 0 R θ)‖ := by
+  -- Use `‖exp w‖ = exp (re w)` and `im z = R * sin θ`.
+  simp [upperSemicircleIntegrand, abs_of_pos hR, Complex.norm_exp,
+    circleMap, Complex.exp_mul_I, Complex.mul_re,
+    Complex.sin_ofReal_re]
+  ring_nf
+
+/-- Evaluate the elementary exponential integral by its antiderivative. -/
+lemma integral_exp_neg_mul (k b : ℝ) (hk : k ≠ 0) :
+    (∫ x in (0 : ℝ)..b, Real.exp (-k * x)) =
+      (1 - Real.exp (-k * b)) / k := by
+  -- The chain rule shows that `-exp (-k*x) / k` has derivative `exp (-k*x)`.
+  have hderiv : ∀ x : ℝ,
+      HasDerivAt (fun y : ℝ =&gt; -Real.exp (-k * y) / k)
+        (Real.exp (-k * x)) x := by
+    intro x
+    simpa [div_eq_mul_inv, hk] using
+      (((Real.hasDerivAt_exp (-k * x)).comp x
+        ((hasDerivAt_id x).const_mul (-k))).neg.div_const k)
+  -- The fundamental theorem of calculus reduces the integral to endpoint values.
+  -- `show` states the continuity fact we need; `fun_prop` proves it from
+  -- continuity of multiplication and exp. `.intervalIntegrable` then uses it.
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun x _ =&gt; hderiv x)
+    ((show Continuous (fun x : ℝ =&gt; Real.exp (-k * x)) by
+      fun_prop).intervalIntegrable 0 b)]
+  simp only [mul_zero, Real.exp_zero]
+  ring
+
+/-- The estimate for one half of the arc. We will reuse it by reflection. -/
+lemma jordan_half_bound
+    (a R M : ℝ) (ha : 0 &lt; a) (hR : 0 &lt; R) (hM : 0 ≤ M)
+    (F : ℝ → ℂ)
+    (hF : ∀ θ ∈ Icc (0 : ℝ) (Real.pi / 2),
+      ‖F θ‖ ≤ R * M * Real.exp (-a * R * Real.sin θ)) :
+    ‖∫ θ in (0 : ℝ)..Real.pi / 2, F θ‖ ≤ Real.pi / (2 * a) * M := by
+  -- Jordan's sine inequality turns the damping into `exp (-k*θ)`.
+  let k : ℝ := 2 * a * R / Real.pi
+  -- `dsimp [k]` unfolds our abbreviation; `positivity` checks the signs
+  -- using `ha`, `hR`, and the positivity of π.
+  have hk : 0 &lt; k := by dsimp [k]; positivity
+  have hRM : 0 ≤ R * M := mul_nonneg hR.le hM
+  have hpoint : ∀ θ ∈ Icc (0 : ℝ) (Real.pi / 2),
+      ‖F θ‖ ≤ R * M * Real.exp (-k * θ) := by
+    intro θ hθ
+    have hsin := Real.mul_le_sin hθ.1 hθ.2
+    -- Multiplication by the negative number `-(a*R)` reverses the inequality.
+    have hexponent : -a * R * Real.sin θ ≤ -k * θ := by
+      calc
+        -a * R * Real.sin θ = -(a * R) * Real.sin θ := by ring
+        _ ≤ -(a * R) * (2 / Real.pi * θ) :=
+          mul_le_mul_of_nonpos_left hsin
+            (neg_nonpos.mpr (mul_nonneg ha.le hR.le))
+        _ = -k * θ := by dsimp [k]; ring
+    exact (hF θ hθ).trans
+      (mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr hexponent) hRM)
+
+  calc
+    -- Bound the norm of the integral by the integral of the real majorant.
+    ‖∫ θ in (0 : ℝ)..Real.pi / 2, F θ‖
+        ≤ ∫ θ in (0 : ℝ)..Real.pi / 2, R * M * Real.exp (-k * θ) := by
+          apply intervalIntegral.norm_integral_le_of_norm_le (by positivity)
+          · -- The integral estimate asks for an almost-everywhere bound.
+            -- With no exceptional set needed, `filter_upwards []` lets us
+            -- prove it for every θ. Here hθ says `0 &lt; θ ∧ θ ≤ π/2`.
+            filter_upwards [] with θ hθ
+            exact hpoint θ ⟨hθ.1.le, hθ.2⟩
+          · exact (show Continuous (fun θ : ℝ =&gt;
+              R * M * Real.exp (-k * θ)) by fun_prop).intervalIntegrable _ _
+    -- The integral is `(R*M/k) * (1 - exp (-k*π/2))`, at most `R*M/k`.
+    _ = R * M * ((1 - Real.exp (-k * (Real.pi / 2))) / k) := by
+          rw [intervalIntegral.integral_const_mul, integral_exp_neg_mul k _ hk.ne']
+    _ ≤ R * M * (1 / k) := by
+          -- `gcongr` reduces this to `1 - exp (...) ≤ 1`, checking that
+          -- the common multiplier is nonnegative and the divisor positive.
+          gcongr
+          exact sub_le_self _ (Real.exp_pos _).le
+    -- Substituting `k` cancels the radius: this is the crucial uniform bound.
+    _ = Real.pi / (2 * a) * M := by
+          dsimp [k]
+          field_simp
+
+/-- Add the estimates for the two halves to bound the entire upper arc. -/
+lemma jordan_integral_bound
+    (a R M : ℝ) (ha : 0 &lt; a) (hR : 0 &lt; R) (hM : 0 ≤ M)
+    (F : ℝ → ℂ)
+    (hF : ∀ θ ∈ Icc (0 : ℝ) Real.pi,
+      ‖F θ‖ ≤ R * M * Real.exp (-a * R * Real.sin θ))
+    (hFint : IntervalIntegrable F volume 0 Real.pi) :
+    ‖∫ θ in (0 : ℝ)..Real.pi, F θ‖ ≤ Real.pi / a * M := by
+  have hmid : 0 ≤ Real.pi / 2 := by positivity
+  have hmid_pi : Real.pi / 2 ≤ Real.pi := by linarith [Real.pi_pos]
+
+  -- Apply the half-arc estimate directly on `[0, π/2]`.
+  have hleft := jordan_half_bound a R M ha hR hM F (by
+    intro θ hθ
+    exact hF θ ⟨hθ.1, hθ.2.trans hmid_pi⟩)
+
+  -- Reflect the right half by `θ = π-u`. Its sine is unchanged,
+  -- so exactly the same half-arc estimate applies to `u ↦ F (π-u)`.
+  have hright := jordan_half_bound a R M ha hR hM
+    (fun u =&gt; F (Real.pi - u)) (by
+      intro u hu
+      simpa only [Real.sin_pi_sub] using
+        hF (Real.pi - u) ⟨by linarith [hu.2], by linarith [hu.1]⟩)
+  rw [intervalIntegral.integral_comp_sub_left] at hright
+  have hhalf : Real.pi - Real.pi / 2 = Real.pi / 2 := by ring
+  simp only [hhalf, sub_zero] at hright
+
+  -- Integrability on the whole interval gives integrability on both halves.
+  have hmid_mem : Real.pi / 2 ∈ uIcc (0 : ℝ) Real.pi := by
+    rw [uIcc_of_le Real.pi_pos.le]
+    exact ⟨hmid, hmid_pi⟩
+  have hleft_int : IntervalIntegrable F volume 0 (Real.pi / 2) :=
+    hFint.mono_set (uIcc_subset_uIcc_left hmid_mem)
+  have hright_int : IntervalIntegrable F volume (Real.pi / 2) Real.pi :=
+    hFint.mono_set (uIcc_subset_uIcc_right hmid_mem)
+  calc
+    ‖∫ θ in (0 : ℝ)..Real.pi, F θ‖ =
+        ‖(∫ θ in (0 : ℝ)..Real.pi / 2, F θ) +
+          ∫ θ in Real.pi / 2..Real.pi, F θ‖ := by
+            rw [intervalIntegral.integral_add_adjacent_intervals hleft_int hright_int]
+    _ ≤ ‖∫ θ in (0 : ℝ)..Real.pi / 2, F θ‖ +
+        ‖∫ θ in Real.pi / 2..Real.pi, F θ‖ := norm_add_le _ _
+    _ ≤ Real.pi / (2 * a) * M + Real.pi / (2 * a) * M :=
+          add_le_add hleft hright
+    _ = Real.pi / a * M := by ring
+
+/-- A family satisfying our exponential bound has integrals tending to zero. -/
+theorem jordans_lemma_of_majorant
+    (a : ℝ) (ha : 0 &lt; a)
+    (M : ℝ → ℝ) (hM_nonneg : ∀ R, 0 ≤ M R)
+    (hM : Tendsto M atTop (𝓝 0)) (F : ℝ → ℝ → ℂ)
+    (hF : ∀ R, 0 &lt; R → ∀ θ ∈ Icc (0 : ℝ) Real.pi,
+      ‖F R θ‖ ≤ R * M R * Real.exp (-a * R * Real.sin θ))
+    (hFint : ∀ R, IntervalIntegrable (F R) volume 0 Real.pi) :
+    Tendsto (fun R =&gt; ∫ θ in (0 : ℝ)..Real.pi, F R θ)
+      atTop (𝓝 0) := by
+  -- A fixed multiple of `M R` still tends to zero.
+  have hlimit : Tendsto (fun R =&gt; Real.pi / a * M R) atTop (𝓝 0) := by
+    simpa using hM.const_mul (Real.pi / a)
+  -- Our bound holds for every positive radius, hence eventually as `R → ∞`.
+  -- Squeezing the norm below a function tending to zero finishes the proof.
+  -- `refine` applies the squeeze theorem, supplying `hlimit` now and leaving
+  -- the `?_` as a new goal: the eventual bound on the norm of the integral.
+  refine squeeze_zero_norm' ?_ hlimit
+  -- `atTop` means "for all sufficiently large R". Eventually R &gt; 0.
+  -- `filter_upwards` fixes such an R and names this inequality `hR`;
+  -- the remaining goal is our ordinary pointwise integral estimate.
+  filter_upwards [eventually_gt_atTop (0 : ℝ)] with R hR
+  exact jordan_integral_bound a R (M R) ha hR (hM_nonneg R)
+    (F R) (hF R hR) (hFint R)
+
+/-- Jordan's lemma for the anticlockwise upper semicircle, with `a &gt; 0`.
+`M R` bounds `‖f z‖` on the radius-`R` arc and tends to zero as `R → ∞`. -/
+theorem jordans_lemma
+    (a : ℝ) (ha : 0 &lt; a) (f : ℂ → ℂ)
+    (M : ℝ → ℝ) (hM_nonneg : ∀ R, 0 ≤ M R)
+    (hM : Tendsto M atTop (𝓝 0))
+    (hbound : ∀ R, 0 &lt; R → ∀ θ ∈ Icc (0 : ℝ) Real.pi,
+      ‖f (circleMap 0 R θ)‖ ≤ M R)
+    (hint : ∀ R,
+      IntervalIntegrable (upperSemicircleIntegrand a R f) volume 0 Real.pi) :
+    Tendsto
+      (fun R =&gt; ∫ θ in (0 : ℝ)..Real.pi,
+        upperSemicircleIntegrand a R f θ)
+      atTop (𝓝 0) := by
+  -- Apply the general result we just proved to the actual contour integrand.
+  apply jordans_lemma_of_majorant a ha M hM_nonneg hM
+    (fun R =&gt; upperSemicircleIntegrand a R f)
+  · intro R hR θ hθ
+    -- The norm identity leaves only the given bound `‖f z‖ ≤ M R`.
+    rw [norm_upperSemicircleIntegrand a R hR]
+    calc
+      R * Real.exp (-a * R * Real.sin θ) * ‖f (circleMap 0 R θ)‖
+          ≤ R * Real.exp (-a * R * Real.sin θ) * M R := by
+            -- The common factor is nonnegative, so `gcongr` leaves just
+            -- `‖f (circleMap 0 R θ)‖ ≤ M R`, supplied by `hbound` below.
+            gcongr
+            exact hbound R hR θ hθ
+      _ = R * M R * Real.exp (-a * R * Real.sin θ) := by ring
+  · exact hint
+
+end LeanIn</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <h3>The mathematical helpers</h3>
+    <dl>
+      <dt><code>upperSemicircleIntegrand</code></dt>
+      <dd>Writes $e^{iaz}f(z)\,dz$ in terms of $\theta$. Here <code>circleMap 0 R θ</code> is $Re^{i\theta}$ and <code>circleMap 0 R θ * Complex.I</code> is its tangent $dz/d\theta$.</dd>
+      <dt><code>norm_upperSemicircleIntegrand</code></dt>
+      <dd>Separates the three contributions to the norm: the radius $R$, the damping factor $e^{-aR\sin\theta}$, and $|f(z)|$.</dd>
+      <dt><code>integral_exp_neg_mul</code></dt>
+      <dd>Checks the derivative of $-e^{-kx}/k$ and applies the fundamental theorem of calculus. This is the only integral we need to evaluate explicitly.</dd>
+      <dt><code>jordan_half_bound</code> and <code>Real.mul_le_sin</code></dt>
+      <dd>Use the sine inequality $2\theta/\pi\le\sin\theta$ on $[0,\pi/2]$. Multiplication by $-aR$ reverses the inequality; monotonicity of the exponential then gives an integrable upper bound. Substituting $k=2aR/\pi$ cancels $R$.</dd>
+      <dt><code>intervalIntegral.integral_comp_sub_left</code></dt>
+      <dd>Performs the substitution $\theta=\pi-u$. The reversed limits and the minus sign from $d\theta=-du$ cancel, giving the same estimate for the right half without repeating the calculus.</dd>
+      <dt><code>jordan_integral_bound</code></dt>
+      <dd>Restricts the integrability assumption to each half, splits the integral at $\pi/2$, and adds the two norm bounds with the triangle inequality.</dd>
+      <dt><code>jordans_lemma_of_majorant</code> and <code>squeeze_zero_norm'</code></dt>
+      <dd>Turn our estimate into a limit. The prime in <code>squeeze_zero_norm'</code> allows a bound that holds eventually: here it holds for every $R&gt;0$, which is enough as $R\to\infty$.</dd>
+      <dt><code>jordans_lemma</code></dt>
+      <dd>Applies our limit theorem to the actual contour integrand. After rewriting its norm, the only remaining estimate is the hypothesis $|f(z)|\le M(R)$.</dd>
+    </dl>
+
+    <h3>Reading the new Lean syntax and tactics</h3>
+    <p>This proof introduces some analysis notation and tactics that deserve a slower first reading. The examples below refer to the exact places where they occur in the proof.</p>
+    <dl>
+      <dt><code>Filter</code>, <code>atTop</code>, <code>𝓝 0</code>, and <code>Tendsto</code></dt>
+      <dd>A filter describes what it means for a property to hold “eventually”. For real radii, <code>atTop</code> means “for all sufficiently large radii”; the neighbourhood filter <code>𝓝 0</code> describes being arbitrarily close to zero. Thus <code>Tendsto M atTop (𝓝 0)</code> says that $M(R)$ is eventually in every neighbourhood of zero. In epsilon language: for every $\varepsilon&gt;0$, there is a threshold beyond which $|M(R)|&lt;\varepsilon$. <code>open Filter</code> makes names from that namespace available without the prefix.</dd>
+
+      <dt><code>refine squeeze_zero_norm' ?_ hlimit</code></dt>
+      <dd><code>refine</code> builds a proof from a partially filled-in expression. Each <code>?_</code> asks Lean to create a goal for the missing piece. Here the squeeze theorem needs an eventual norm bound and a proof that the upper bound tends to zero. We supply the second with <code>hlimit</code>; the hole leaves only the first to prove. An ordinary <code>_</code>, as in <code>norm_add_le _ _</code>, asks Lean to infer an argument from context.</dd>
+
+      <dt><code>filter_upwards [eventually_gt_atTop (0 : ℝ)] with R hR</code></dt>
+      <dd><code>filter_upwards</code> turns an eventual claim into a pointwise proof using eventual facts listed in brackets. Here <code>eventually_gt_atTop (0 : ℝ)</code> says that sufficiently large real numbers are positive. The tactic introduces a radius <code>R</code> and the hypothesis <code>hR : 0 &lt; R</code>. We must then show that the integral at this radius has norm at most $(\pi/a)M(R)$. The next <code>exact</code> supplies precisely that estimate. With several facts in brackets, the tactic works where they all hold.</dd>
+
+      <dt><code>filter_upwards [] with θ hθ</code></dt>
+      <dd>The earlier use has a different filter: the integral comparison asks for a bound almost everywhere with respect to <code>volume</code>, the usual Lebesgue measure. “Almost everywhere” allows exceptions on a set of measure zero. Our bound holds at every point of the interval, so we need no exceptional-set facts in the brackets. The tactic introduces <code>θ</code> and the premise <code>hθ</code> that $0&lt;\theta\le\pi/2$. Then <code>⟨hθ.1.le, hθ.2⟩</code> supplies the closed-interval membership needed by <code>hpoint</code>. This is the same tactic as in the limit argument, but “eventually” here means “almost everywhere”.</dd>
+
+      <dt><code>gcongr</code></dt>
+      <dd>Short for “generalised congruence”, this tactic uses monotonicity to reduce an inequality between larger expressions to inequalities between their parts. For example, $cu\le cv$ follows from $u\le v$ when $c\ge0$. In the half-arc estimate it reduces the goal to $1-e^{-k\pi/2}\le1$; in the final theorem it leaves $|f(z)|\le M(R)$. It checks the required sign conditions where it can and leaves any unresolved conditions as goals. It does not cancel arbitrary factors regardless of their sign.</dd>
+
+      <dt><code>show Continuous … by fun_prop</code></dt>
+      <dd><code>show</code> specifies the type of an intermediate proof. Here we explicitly ask for continuity of an exponential expression. <code>fun_prop</code> assembles standard facts about function properties, such as continuity of products and compositions, to prove it. The following <code>.intervalIntegrable</code> uses continuity to obtain integrability on the finite interval; <code>fun_prop</code> is proving continuity at this step.</dd>
+
+      <dt><code>dsimp [k]</code> and <code>positivity</code></dt>
+      <dd><code>dsimp [k]</code> unfolds the local definition of <code>k</code>, exposing $2aR/\pi$. <code>positivity</code> then proves its positivity from the signs of the factors and denominator. The line <code>by dsimp [k]; positivity</code> runs the unfolding first, followed by the sign calculation.</dd>
+
+      <dt><code>simpa … using …</code> and <code>simp only […]</code></dt>
+      <dd><code>simpa using h</code> simplifies both the current goal and the type of <code>h</code>, then checks that they match. For example, <code>hM.const_mul (Real.pi / a)</code> gives a limit with value $(\pi/a)\cdot0$; <code>simpa</code> reduces that value to zero. <code>simpa only [Real.sin_pi_sub] using …</code> uses just the named rewrite to identify the reflected sine. Likewise, <code>simp only</code> restricts simplification to the listed rules instead of the usual collection of simplification lemmas.</dd>
+
+      <dt><code>field_simp</code>, <code>ring</code>, <code>ring_nf</code>, and <code>linarith</code></dt>
+      <dd><code>field_simp</code> clears denominators, proving or requesting the needed nonzero conditions. Here it finishes the cancellation after unfolding <code>k</code>. <code>ring</code> checks polynomial identities by normalising them; <code>ring_nf</code> puts polynomial expressions in normal form and can also close a goal when both sides then agree. <code>linarith</code> combines linear equalities and inequalities from the context, for example to check that a reflected angle lies in the required interval.</dd>
+
+      <dt><code>hθ.1</code>, <code>hθ.2</code>, <code>hR.le</code>, <code>hk.ne'</code>, and <code>.mpr</code></dt>
+      <dd>These dotted expressions extract or transform existing facts. Membership in <code>Icc</code> is a pair of endpoint inequalities: <code>hθ.1</code> is the lower bound and <code>hθ.2</code> the upper bound. From <code>hR : 0 &lt; R</code>, <code>hR.le</code> gives $0\le R$; from <code>hk : 0 &lt; k</code>, <code>hk.ne'</code> gives $k\ne0$. For an equivalence <code>P ↔ Q</code>, <code>.mpr</code> uses the right-to-left implication. Thus <code>Real.exp_le_exp.mpr hexponent</code> turns an inequality between exponents into one between their exponentials. Finally, <code>.trans</code> chains inequalities, and <code>⟨…, …⟩</code> packages two facts into a pair.</dd>
+    </dl>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>This is the upper-half-plane version for $a&gt;0$. For $a&lt;0$, the matching statement uses a lower semicircle so that the exponential still decays. The theorem assumes integrability of the parameterised integrand on $[0,\pi]$ for every radius; continuity of $f$ on each arc is a common sufficient condition. No holomorphicity assumption is needed for this arc estimate itself.</p>
+    <p>The decay hypothesis is expressed by a nonnegative function $M$ with $M(R)\to0$ and $|f(z)|\le M(R)$ on the radius-$R$ arc. This is a standard useful form of Jordan's lemma, but it is not a claim that every meromorphic function automatically satisfies the bound.</p>
+  </section>
+</article>
+<script type="module" src="../proofs.js?v=20260911"></script>

@@ -1,5 +1,5 @@
-import { proofIndex } from "./proof-index.js?v=20260812";
-import "./site-header.js?v=20260806";
+import { proofIndex } from "./proof-index.js?v=20260911";
+import "./site-header.js?v=20260911";
 
 export const proofCount = proofIndex.length;
 export const proofNoun = proofCount === 1 ? "Proof" : "Proofs";

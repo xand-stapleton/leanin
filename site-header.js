@@ -12,14 +12,18 @@
           <a href="${root}helpful-resources.html">Helpful Resources</a>
           <a href="${root}lean-neovim-setup.html">Neovim Setup</a>
           <a href="${root}learn-mathlib-in-y-minutes.html">mathlib in Y Minutes</a>
-          <button class="ancient-toggle" type="button" data-ancient-toggle>Ancient mode</button>
+          <button class="ancient-toggle" type="button" data-ancient-toggle title="A simpler view for older devices that cannot cope with this site’s JavaScript — inspired by trying it on my beloved iPad mini (2nd generation, 2014).">Ancient mode</button>
         </div>
       </nav>
     `;
   }
 
+  function ancientModeNoticeHtml() {
+    return `<aside class="ancient-mode-notice" data-ancient-mode-notice>A simpler view for older devices that cannot cope with this site’s JavaScript — inspired by trying it on my beloved iPad mini (2nd generation, 2014).</aside>`;
+  }
+
   function siteHeaderHtml(root) {
-    return `<header class="site-header">${navigationHtml(root)}</header>`;
+    return `<header class="site-header">${navigationHtml(root)}</header>${ancientModeNoticeHtml()}`;
   }
 
   function setupAncientMode() {
@@ -51,6 +55,10 @@
     document.querySelectorAll("[data-site-header]").forEach((header) => {
       header.classList.add("site-header");
       header.innerHTML = navigationHtml(root);
+
+      const nextElement = header.nextElementSibling;
+      if (nextElement?.hasAttribute("data-ancient-mode-notice")) nextElement.remove();
+      header.insertAdjacentHTML("afterend", ancientModeNoticeHtml());
     });
 
     setupAncientMode();

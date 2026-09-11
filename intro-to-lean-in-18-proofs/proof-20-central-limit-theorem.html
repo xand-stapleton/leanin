@@ -1,0 +1,182 @@
+<meta charset="utf-8">
+<script src="../theme-loader.js"></script>
+<article class="proof-content">
+  <section class="proof-section">
+    <h2>Lean Statement</h2>
+    <pre><code>TendstoInDistribution
+  (fun (n : ℕ) ω ↦ (√n)⁻¹ * ∑ k ∈ Finset.range n, X k ω)
+  atTop Y (fun _ ↦ P) P'</code></pre>
+    <blockquote><strong>Read this as:</strong> let $X_0,X_1,\ldots$ be independent, identically distributed real random variables. If $X_0$ has mean $0$ and second moment $1$ (hence variance $1$), then the normalised sums $\frac{X_0+\cdots+X_{n-1}}{\sqrt n}$ converge in distribution to a standard Gaussian random variable $Y$.</blockquote>
+    <p>For a fixed real $t$, write $\varphi(t)=\mathbb E[e^{itX_0}]$. Independence and identical distribution give</p>
+    <p>\[
+      \varphi_{S_n/\sqrt n}(t)=\varphi(t/\sqrt n)^n.
+    \]</p>
+    <p>The mean and second-moment assumptions give the local expansion</p>
+    <p>\[
+      \varphi(u)=1-\frac{u^2}{2}+o(u^2) \qquad (u\to0).
+    \]</p>
+    <p>Putting $u=t/\sqrt n$ turns this into $1-\frac{t^2}{2n}+o(1/n)$. Therefore the $n$th power tends to $e^{-t^2/2}$, the characteristic function of $N(0,1)$. Lévy's continuity theorem then converts that pointwise statement into convergence in distribution.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Why This Proof Matters</h2>
+    <p>The central limit theorem explains why Gaussian distributions recur in data, physics, and statistics. Closer to my heart is the Neural Network Field Theory correspondence, which the CLT (or a generalisation of the CLT) underpins. More importantly for Lean, it illustrates a dependable formalisation pattern: turn a statement about laws into an equality or limit of characteristic functions; separate the probability calculation from the analytic estimate; then use a continuity theorem to return to distributions.</p>
+    <p>The write-up follows the characteristic-function proof in Patrick Billingsley, <em>Probability and Measure</em>, 3rd ed., Wiley, 1995, Section 27, “The Central Limit Theorem.” Billingsley explicitly obtains the characteristic function $\varphi^n(t/\sqrt n)$ and finishes with the continuity theorem; see the <a href="https://www.colorado.edu/amath/sites/default/files/attached-files/billingsley.pdf">standard non-Lean proof</a>. The Lean proof below uses the same mathematical route but has been factored into page-specific lemmas and comments.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Schematic Outline</h2>
+    <ol>
+      <li>Define the normalised finite sum $S_n/\sqrt n$.</li>
+      <li>Use independence to factor its characteristic function, then use identical distribution to make the product an $n$th power.</li>
+      <li>Compose the second-order Taylor remainder for $\varphi$ with $n\mapsto t/\sqrt n$.</li>
+      <li>Rewrite the resulting scale as a constant multiple of $1/n$ and apply the complex exponential-limit lemma.</li>
+      <li>Recognise the limit as the characteristic function of `gaussianReal 0 1`.</li>
+      <li>Apply Lévy's continuity theorem to obtain convergence in distribution.</li>
+    </ol>
+  </section>
+
+  <section class="proof-section">
+    <h2>Lean Proof</h2>
+    <pre><code class="language-lean">import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
+import Mathlib.MeasureTheory.Measure.CharacteristicFunction.TaylorExpansion
+import Mathlib.MeasureTheory.Measure.LevyConvergence
+import Mathlib.Probability.Independence.CharacteristicFunction
+
+open MeasureTheory ProbabilityTheory Complex Filter
+open scoped Real Topology
+
+noncomputable section
+
+namespace CLTPage
+
+variable {Ω Ω' : Type*}
+variable {mΩ : MeasurableSpace Ω} {mΩ' : MeasurableSpace Ω'}
+variable {P : Measure Ω} {P' : Measure Ω'}
+variable {X : ℕ → Ω → ℝ} {Y : Ω' → ℝ}
+
+/-- Naming the normalised sum keeps the final theorem and the intermediate
+    characteristic-function calculation readable. -/
+def normalisedSum (X : ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) : ℝ :=
+  (√n)⁻¹ * ∑ k ∈ Finset.range n, X k ω
+
+/--
+Independence supplies the product formula. Identical distribution says that
+every factor has the law of `X 0`, so the product is a power. This is the
+probability-specific part of the proof; no limiting argument happens here.
+-/
+lemma charFun_normalisedSum
+    (h_indep : iIndepFun X P)
+    (h_law : ∀ k : ℕ, IdentDistrib (X k) (X 0) P P)
+    (n : ℕ) (t : ℝ) :
+    charFun (P.map (normalisedSum X n)) t =
+      (charFun (P.map (X 0)) ((√n)⁻¹ * t)) ^ n := by
+  -- `IdentDistrib` also gives the a.e.-measurability needed by the product lemma.
+  have h_measurable : ∀ k : ℕ, AEMeasurable (X k) P :=
+    fun k => (h_law k).aemeasurable_fst
+  change charFun (P.map (fun ω ↦ (√n)⁻¹ * ∑ k ∈ Finset.range n, X k ω)) t = _
+  have h_sum_measurable :
+      AEMeasurable (fun ω ↦ ∑ k ∈ Finset.range n, X k ω) P :=
+    Finset.aemeasurable_fun_sum _ fun k _ ↦ h_measurable k
+  calc
+    -- Scaling a variable replaces `t` by `(√n)⁻¹ * t` in its characteristic function.
+    charFun (P.map (fun ω ↦ (√n)⁻¹ * ∑ k ∈ Finset.range n, X k ω)) t =
+        charFun (P.map (fun ω ↦ ∑ k ∈ Finset.range n, X k ω)) ((√n)⁻¹ * t) :=
+      charFun_map_mul_comp h_sum_measurable _ _
+    -- Independence factors the characteristic function of the finite sum.
+    _ = ∏ k ∈ Finset.range n, charFun (P.map (X k)) ((√n)⁻¹ * t) := by
+      simpa only [Finset.prod_apply] using congrFun
+        ((h_indep.restrict (Finset.range n)).charFun_map_fun_finsetSum_eq_prod
+          (fun k _ ↦ h_measurable k)) ((√n)⁻¹ * t)
+    -- Equal laws turn the product of identical factors into an `n`th power.
+    _ = (charFun (P.map (X 0)) ((√n)⁻¹ * t)) ^ n := by
+      simp [fun k ↦ (h_law k).map_eq]
+
+variable [IsProbabilityMeasure P]
+
+/--
+The Taylor remainder is first proved near zero and then composed with the
+CLT scale `n ↦ t / √n`. Keeping this as a separate lemma makes explicit
+which part of the proof uses the moment assumptions.
+-/
+lemma scaled_taylor_remainder
+    {Z : Ω → ℝ} (hZ : AEMeasurable Z P)
+    (h_mean : P[Z] = 0) (h_secondMoment : P[Z ^ 2] = 1)
+    (t : ℝ) :
+    (fun n : ℕ ↦ charFun (P.map Z) ((√n)⁻¹ * t) -
+      (1 + (-(((√n)⁻¹ * t) ^ 2 / 2) : ℂ))) =o[atTop]
+      fun n ↦ ((√n)⁻¹ * t) ^ 2 := by
+  have h_scale : Tendsto (fun n : ℕ ↦ (√n)⁻¹ * t) atTop (𝓝 0) := by
+    -- Because `√n → ∞`, its reciprocal tends to zero.
+    rw [← zero_mul t]
+    exact (tendsto_inv_atTop_zero.comp
+      (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)).mul_const t
+  -- Compose Mathlib's local Taylor estimate with the scale just established.
+  convert (taylor_charFun_two hZ h_mean h_secondMoment).comp_tendsto h_scale using 2
+  · simp
+    ring
+  · rfl
+
+/--
+The analytic step in the textbook proof: after rescaling, the Taylor error is
+`o(1/n)`, so the standard complex limit `(1 + z / n + o(1/n))^n → exp z`
+applies with `z = -t^2/2`.
+-/
+lemma charFun_power_tendsto_gaussian
+    {Z : Ω → ℝ} (hZ : AEMeasurable Z P)
+    (h_mean : P[Z] = 0) (h_secondMoment : P[Z ^ 2] = 1)
+    (t : ℝ) :
+    Tendsto (fun n : ℕ ↦ (charFun (P.map Z) ((√n)⁻¹ * t)) ^ n)
+      atTop (𝓝 (exp (-t ^ 2 / 2))) := by
+  apply tendsto_pow_exp_of_isLittleO_sub_add_div
+  have h_remainder := scaled_taylor_remainder hZ h_mean h_secondMoment t
+  have h_norm_scale :
+      (fun n : ℕ ↦ ‖(1 / n : ℂ)‖) = (fun n : ℕ ↦ ‖(1 / n : ℝ)‖) := by
+    simp
+  -- The next rewrites express little-o in norms. The algebra below identifies
+  -- `(t / √n)^2` with the fixed multiple `t^2 * (1 / n)`.
+  rw [← Asymptotics.isLittleO_norm_right, h_norm_scale,
+    Asymptotics.isLittleO_norm_right]
+  refine Asymptotics.IsLittleO.of_const_mul_right (c := t ^ 2) ?_
+  convert h_remainder using 4 with n &lt;;&gt; norm_cast &lt;;&gt; simp [field]
+
+variable [IsProbabilityMeasure P']
+
+/-- The CLT is now just the assembly of the preceding probability and analysis lemmas. -/
+theorem central_limit_theorem_page
+    (hY : HasLaw Y (gaussianReal 0 1) P')
+    (h_mean : P[X 0] = 0) (h_secondMoment : P[X 0 ^ 2] = 1)
+    (h_indep : iIndepFun X P)
+    (h_law : ∀ k : ℕ, IdentDistrib (X k) (X 0) P P) :
+    TendstoInDistribution (normalisedSum X) atTop Y (fun _ ↦ P) P' where
+  -- A normalised finite sum is measurable because each summand is measurable.
+  forall_aemeasurable n := by
+    change AEMeasurable (fun ω ↦ (√n)⁻¹ * ∑ k ∈ Finset.range n, X k ω) P
+    exact AEMeasurable.const_mul
+      (Finset.aemeasurable_fun_sum _ fun k _ ↦ (h_law k).aemeasurable_fst) _
+  tendsto := by
+    -- Lévy reduces convergence of laws to pointwise convergence of charFuns.
+    refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.mpr fun t ↦ ?_
+    rw! [hY.map_eq]
+    -- The two sides are exactly the previous power limit and the Gaussian charFun.
+    simpa [charFun_normalisedSum h_indep h_law, charFun_gaussianReal, neg_div] using
+      charFun_power_tendsto_gaussian (h_law 0).aemeasurable_fst h_mean h_secondMoment t
+
+end CLTPage</code></pre>
+  </section>
+
+  <section class="proof-section">
+    <h2>Proof Breakdown</h2>
+    <p><strong>1. Calculate the finite-sum characteristic function.</strong> `charFun_normalisedSum` has a three-line `calc` proof. The first line moves the scalar $1/\sqrt n$ from the random variable to the argument $t$. The second is the finite independence product formula. The third replaces all product factors using `IdentDistrib` and evaluates the product of a constant over `Finset.range n`.</p>
+    <p><strong>2. Keep the asymptotic substitution visible.</strong> `scaled_taylor_remainder` is deliberately separate. `taylor_charFun_two` gives a statement at $u\to0$; `h_scale` proves that $t/\sqrt n\to0$; and `comp_tendsto` performs exactly the substitution $u=t/\sqrt n$ from the paper proof.</p>
+    <p><strong>3. Use the elementary power limit.</strong> The only slightly technical Lean passage rewrites little-$o$ in norm form. It records the elementary identity $(t/\sqrt n)^2=t^2/n$, allowing `tendsto_pow_exp_of_isLittleO_sub_add_div` to recognise the pattern $(1+z/n+o(1/n))^n$ with $z=-t^2/2$.</p>
+    <p><strong>4. Return to probability laws.</strong> `charFun_gaussianReal` identifies the limit with the standard Gaussian's characteristic function. `ProbabilityMeasure.tendsto_iff_tendsto_charFun` is Lévy's continuity theorem in the form needed here, so its application proves convergence in distribution rather than merely convergence of transforms.</p>
+  </section>
+
+  <section class="proof-section">
+    <h2>Caveat</h2>
+    <p>This is not a proof of Lévy's continuity theorem or of the Taylor expansion from first principles. This uses those lower-level theorems, together with the finite independence product formula and the complex exponential limit. What it does <em>not</em> use is Mathlib's packaged central-limit-theorem file or theorem: the CLT-specific factorisation, rescaling, and final assembly are displayed here. 
+
+</article>
+<script type="module" src="../proofs.js?v=20260911"></script>
